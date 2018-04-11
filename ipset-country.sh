@@ -55,7 +55,7 @@ function check_conf_files() {
 }
 
 # build an ip set for the given country
-# $@: space separated list of country name(s); Russia China
+# $1: a case insensitive country name
 function build_ipset() {
 	local GEO_ID=$(awk -F "," 'BEGIN{IGNORECASE = 1}/'$1'/ {print $1}' ${COUNTRY_ID_MAP})
 	awk -F "," -v ID=$GEO_ID -v COUNTRY=$1 -v IPSET=$IPSET_NAME '{if ($3 == ID) print "add "IPSET" "$1" comment \""COUNTRY"\""}' ${ID_IPRANGE_MAP} >> $IPSET_CONF_FILE
