@@ -1,0 +1,20 @@
+[Unit]
+Description=Refresh geo ipset
+Requires=ipset.service
+After=ipset.service
+
+[Service]
+StandardError=journal
+Type=oneshot
+
+# backup existing sets: currently named 'manual-blacklist' & 'country-blacklist'
+ExecStart=/usr/bin/ipset save manual-blacklist --file /etc/ipset-manual-blacklist.conf.bak
+ExecStart=/usr/bin/ipset save country-blacklist --file /etc/ipset-country-blacklist.conf.bak
+
+# refresh geoip set for countries we want to block: currently only Russia
+ExecStart=/usr/local/bin/ipset-country.sh Russia
+
+# update ipset and persist changes
+ExecStart=/usr/bin/ipset flush country-blacklist
+ExecStart=/usr/bin/ipset restore --exist --file /etc/ipset-country-blacklist.conf
+ExecStart=/usr/bin/ipset save --file /etc/ipset.conf
