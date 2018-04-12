@@ -1,8 +1,26 @@
-# geoipsets
-Small script + systemd service/timer to generate ipset compatible, country-specific IP ranges.
-https://dev.maxmind.com/geoip/geoip2/geolite2/
-https://dev.maxmind.com/geoip/geoip2/whats-new-in-geoip2/
-* MaxMind GeoIP data is packaged in 2 Arch packages: geoip-database & geoip
-* The Arch packages currently (April 2018) seem to package only the binary GeoIP Legacy databases
-* The script below pulls the latest GeoLite2 databases in text/csv format which can be parsed in a Bash script
-* The geoiplookup utility provided by the geoip package doesn't seem to have a way to generate a list of IP ranges associated with a given country
+Geo IP sets
+============
+Small script + systemd service/timer to generate ipset-compatible, country-specific IP ranges.
+
+Introduction
+------------
+This script makes use of the new *GeoLite2 MaxMind* (updated, free) geoip data. This solution was built and tested in Arch Linux and may require distro-specific modifications.
+
+Note that Arch actually has a number of geoip database and client packages also based on *MaxMind* data. However, after a cursory review of these, most seemed concerned with retrieving country information based on IPs. There didn't seem to be an obvious way to get the full list of IP ranges for a geographic region, although its certainly possible I missed this. Downloading the CSV files directly seemed the simplest way forward. I may revisit this to see if something similar can be achieved with the official packages.
+
+Usage
+------------
+*cp ipset-country.sh /usr/local/bin/.
+*chown root:root /usr/local/bin/ipset-country.sh
+*chmod +x /usr/local/bin/ipset-country.sh
+*cp refresh-geoipset.service /etc/systemd/system/.
+*cp refresh-geoipset.timer /etc/systemd/system/.
+*chown root:root /etc/systemd/system/refresh-geoipset.*
+*systemctl enable refresh-geoipset.timer
+
+Sources
+------------
+*http://ipset.netfilter.org/
+*https://dev.maxmind.com/geoip/geoip2/geolite2/
+*https://dev.maxmind.com/geoip/geoip2/whats-new-in-geoip2/
+*https://superuser.com/questions/997426/is-there-any-other-way-to-get-iptables-to-filter-ip-addresses-based-on-geolocati#997437
