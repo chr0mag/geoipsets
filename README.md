@@ -17,7 +17,7 @@ The systemd service assumes that two ipsets named *country-blacklist* and *manua
 We'll insert the blacklist checks at the beginning of our *iptables* rules and then persist the changes.
 * iptables --insert INPUT --match set --match-set manual-blacklist src -j DROP
 * iptables --insert INPUT --match set --match-set country-blacklist src -j DROP
-* iptables-save | sudo tee /etc/iptables/iptables.rules
+* iptables-save > /etc/iptables/iptables.rules
 
 Copy the script & systemd files to the appropriate place for your system
 * cp ipset-country.sh /usr/local/bin/.
