@@ -6,7 +6,7 @@ Introduction
 ------------
 This script makes use of the new *GeoLite2 MaxMind* (updated, free) geoip data. This solution was built and tested in Arch Linux and may require distro-specific modifications.
 
-Note that Arch (and likely other distros) actually has a number of geoip database and client packages also based on *MaxMind* data. However, after a cursory review of these, most seemed concerned with retrieving country information based on IPs. There didn't seem to be an obvious way to get the full list of IP ranges for a geographic region, although its certainly possible I missed this. Downloading the CSV files directly seemed the simplest way forward. I may revisit this to see if something similar can be achieved with the official packages.
+(Note that Arch actually has a number of geoip database and client packages also based on *MaxMind* data. However, after a cursory review of these, most seemed concerned with retrieving country information based on IPs. There didn't seem to be an obvious way to get the full list of IP ranges for a geographic region, although its certainly possible I missed this. Downloading the CSV files directly seemed the simplest way forward. I may revisit this to see if something similar can be achieved with the official packages.)
 
 Usage
 ------------
