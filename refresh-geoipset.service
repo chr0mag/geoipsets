@@ -1,7 +1,7 @@
 [Unit]
 Description=Refresh geo ipset
-Requires=ipset.service
-After=ipset.service
+Requires=ipset.service systemd-networkd.service
+After=ipset.service systemd-networkd.service
 
 [Service]
 StandardError=journal
