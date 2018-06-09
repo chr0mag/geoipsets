@@ -1,0 +1,19 @@
+[Unit]
+Description=Refresh geo ipset
+Requires=ipset.service systemd-networkd.service
+After=ipset.service systemd-networkd.service
+
+[Service]
+StandardError=journal
+Type=oneshot
+
+# backup existing set: 'country-blacklist'
+ExecStart=/usr/bin/ipset save country-blacklist --file /etc/ipset-country.blacklist.bak
+
+# refresh geoip set for countries we want to block: currently only Russia
+ExecStart=/usr/local/bin/build-country-sets.sh iptables Russia
+
+# update ipset and persist changes
+ExecStart=/usr/bin/ipset flush country-blacklist
+ExecStart=/usr/bin/ipset restore --exist --file /etc/ipset-country.blacklist
+ExecStart=/usr/bin/ipset save --file /etc/ipset.conf
