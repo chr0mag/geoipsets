@@ -1,0 +1,11 @@
+[Unit]
+Description=Monthly geo nft set refresh
+
+[Timer]
+#OnCalendar=monthly
+OnCalendar=Tue *-*-1..7 22:00:00
+RandomizedDelaySec=600
+Persistent=true
+ 
+[Install]
+WantedBy=timers.target

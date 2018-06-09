@@ -1,0 +1,17 @@
+[Unit]
+Description=Refresh nft ipset
+Requires=nftables.service systemd-networkd.service
+After=nftables.service systemd-networkd.service
+
+[Service]
+StandardError=journal
+Type=oneshot
+
+# backup existing set: 'country-blacklist'
+ExecStart=/usr/bin/mv /etc/nftables-country.blacklist /etc/nftables-country.blacklist.bak
+
+# refresh geoip set for countries we want to block: currently only Russia
+ExecStart=/usr/local/bin/build-country-sets.sh nftables Russia
+
+# reload ruleset
+ExecStart=/usr/bin/nft --file /etc/nftables.conf

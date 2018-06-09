@@ -88,8 +88,9 @@ function build_ipset() {
 # build an nftables set
 # $1: space separated list of countries
 function build_nftset() {
-	
+
 	NFTSET_CONF_FILE="/etc/nftables-country.blacklist"
+
 	echo "define $SET_NAME = {" > $NFTSET_CONF_FILE
 
 	# iterate over country list and add network addresses to set
@@ -103,8 +104,6 @@ function build_nftset() {
 		fi
 
 		echo "Adding subnets for: $country with ID: $country_id"
-		echo -e "#$country" >> $NFTSET_CONF_FILE
-
 		awk -F "," \
 			-v ID=$country_id \
 			'{if ($3 == ID) print $1","}' ${ID_IPRANGE_MAP} >> $NFTSET_CONF_FILE
