@@ -1,7 +1,7 @@
 [Unit]
 Description=Refresh nft ipset
-Requires=nftables.service systemd-networkd.service
-After=nftables.service systemd-networkd.service
+Requires=nftables.service network-online.target
+After=nftables.service network-online.target
 
 [Service]
 StandardError=journal
