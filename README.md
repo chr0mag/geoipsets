@@ -58,6 +58,10 @@ Install the *systemd* service and timer. The example steps below load the *nftse
 Execute the service once manually to initially populate the *country-blacklist* set.
 * systemctl start nftset.service
 
+Enable the relevant network *wait* service. If using *systemd-networkd*:
+* systemctl start systemd-networkd-wait-online.service
+* systemctl enable systemd-networkd-wait-online.service
+
 Sources
 ------------
 * http://ipset.netfilter.org/
@@ -67,3 +71,4 @@ Sources
 * https://wiki.archlinux.org/index.php/Nftables
 * https://wiki.nftables.org/wiki-nftables/index.php/Main_Page
 * https://unix.stackexchange.com/questions/329971/nftables-ip-set-multiple-tables#331959
+* https://www.freedesktop.org/wiki/Software/systemd/NetworkTarget/
