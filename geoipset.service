@@ -7,13 +7,16 @@ After=ipset.service network-online.target
 StandardError=journal
 Type=oneshot
 
-# backup existing set: 'country-blacklist'
-ExecStart=/usr/bin/ipset save country-blacklist --file /etc/ipset-country.blacklist.bak
+# backup existing sets: 'country-ipv4-blacklist' 'country-ipv6-blacklist'
+ExecStart=/usr/bin/ipset save country-ipv4-blacklist --file /etc/ipset-ipv4-country.blacklist.bak
+ExecStart=/usr/bin/ipset save country-ipv6-blacklist --file /etc/ipset-ipv6-country.blacklist.bak
 
 # refresh geoip set for countries we want to block: currently only Russia
 ExecStart=/usr/local/bin/build-country-sets.sh iptables Russia
 
 # update ipset and persist changes
-ExecStart=/usr/bin/ipset flush country-blacklist
-ExecStart=/usr/bin/ipset restore --exist --file /etc/ipset-country.blacklist
+ExecStart=/usr/bin/ipset flush country-ipv4-blacklist
+ExecStart=/usr/bin/ipset restore --exist --file /etc/ipset-ipv4-country.blacklist
+ExecStart=/usr/bin/ipset flush country-ipv6-blacklist
+ExecStart=/usr/bin/ipset restore --exist --file /etc/ipset-ipv6-country.blacklist
 ExecStart=/usr/bin/ipset save --file /etc/ipset.conf

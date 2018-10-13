@@ -3,9 +3,11 @@
 # write permission to '/etc' required
 
 COUNTRY_ID_MAP="GeoLite2-Country-Locations-en.csv"
-ID_IPRANGE_MAP="GeoLite2-Country-Blocks-IPv4.csv"
-readonly CONFIG_FILES="${COUNTRY_ID_MAP} ${ID_IPRANGE_MAP}"
-readonly SET_NAME="country-blacklist"
+ID_IPv4_RANGE_MAP="GeoLite2-Country-Blocks-IPv4.csv"
+ID_IPv6_RANGE_MAP="GeoLite2-Country-Blocks-IPv6.csv"
+readonly CONFIG_FILES="${COUNTRY_ID_MAP} ${ID_IPv4_RANGE_MAP} ${ID_IPv6_RANGE_MAP}"
+readonly IPv4_SET_NAME="country-ipv4-blacklist"
+readonly IPv6_SET_NAME="country-ipv6-blacklist"
 
 # print an error and exit with failure
 # $1: error message
@@ -62,9 +64,12 @@ function get_country_id() {
 # $1: space separated list of countries
 function build_ipset() {
 
-	IPSET_CONF_FILE="/etc/ipset-country.blacklist"
-	echo "create $SET_NAME hash:net comment" > $IPSET_CONF_FILE
+	IP4SET_CONF_FILE="/etc/ipset-ipv4-country.blacklist"
+	IP6SET_CONF_FILE="/etc/ipset-ipv6-country.blacklist"
 
+	echo "create $IPv4_SET_NAME hash:net comment" > $IP4SET_CONF_FILE
+	echo "create $IPv6_SET_NAME hash:net family inet6 comment" > $IP6SET_CONF_FILE
+	
 	# iterate over country list and add network addresses to set
 	for country in $@
 	do
@@ -80,18 +85,26 @@ function build_ipset() {
 		awk -F "," \
 			-v ID=$country_id \
 			-v COUNTRY=$country \
-			-v IPSET=$SET_NAME \
-			'{if ($3 == ID) print "add "IPSET" "$1" comment \""COUNTRY"\""}' ${ID_IPRANGE_MAP} >> $IPSET_CONF_FILE
+			-v IPSET=$IPv4_SET_NAME \
+			'{if ($3 == ID) print "add "IPSET" "$1" comment \""COUNTRY"\""}' ${ID_IPv4_RANGE_MAP} >> $IP4SET_CONF_FILE
+		
+		awk -F "," \
+			-v ID=$country_id \
+			-v COUNTRY=$country \
+			-v IPSET=$IPv6_SET_NAME \
+			'{if ($3 == ID) print "add "IPSET" "$1" comment \""COUNTRY"\""}' ${ID_IPv6_RANGE_MAP} >> $IP6SET_CONF_FILE
 	done
 }
 
-# build an nftables set
+# build IPv4 & IPv6 nftables sets
 # $1: space separated list of countries
 function build_nftset() {
 
-	NFTSET_CONF_FILE="/etc/nftables-country.blacklist"
+	NFTSET_IPv4_CONF_FILE="/etc/nftables-ipv4-country.blacklist"
+	NFTSET_IPv6_CONF_FILE="/etc/nftables-ipv6-country.blacklist"
 
-	echo "define $SET_NAME = {" > $NFTSET_CONF_FILE
+	echo "define $IPv4_SET_NAME = {" > $NFTSET_IPv4_CONF_FILE
+	echo "define $IPv6_SET_NAME = {" > $NFTSET_IPv6_CONF_FILE
 
 	# iterate over country list and add network addresses to set
 	for country in $@
@@ -106,10 +119,15 @@ function build_nftset() {
 		echo "Adding subnets for: $country with ID: $country_id"
 		awk -F "," \
 			-v ID=$country_id \
-			'{if ($3 == ID) print $1","}' ${ID_IPRANGE_MAP} >> $NFTSET_CONF_FILE
+			'{if ($3 == ID) print $1","}' ${ID_IPv4_RANGE_MAP} >> $NFTSET_IPv4_CONF_FILE
+		
+		awk -F "," \
+			-v ID=$country_id \
+			'{if ($3 == ID) print $1","}' ${ID_IPv6_RANGE_MAP} >> $NFTSET_IPv6_CONF_FILE
 	done
 
-	echo "}" >> $NFTSET_CONF_FILE
+	echo "}" >> $NFTSET_IPv4_CONF_FILE
+	echo "}" >> $NFTSET_IPv6_CONF_FILE
 }
 
 # Entry point
@@ -136,7 +154,7 @@ function main() {
 	case $firewall in
 		"iptables") build_ipset ${countries};;
 		"nftables") build_nftset ${countries};;
-		*) error "Unknown firwall";;
+		*) error "Unknown firewall";;
 	esac
 }
 

@@ -1,6 +1,6 @@
 Geo IP sets
 ============
-Bash script to generate country-specific IP network ranges consumable by both *iptables/ipset* and *nftables*. Also included are *systemd* services/timers for both firewalls to periodically update the IP sets.
+Bash script to generate country-specific IPv4/IPv6 network ranges consumable by both *iptables/ipset* and *nftables*. Also included are *systemd* services/timers for both firewalls to periodically update the IP sets.
 
 Introduction
 ------------
@@ -11,18 +11,24 @@ This script makes use of the new *GeoLite2 MaxMind* (updated, free) geoip data. 
 Usage
 ------------
 Install the Bash script to your system.
+* curl --remote-name --location https://github.com/chr0mag/geoipsets/archive/v0.5.tar.gz
+* tar -zxvf v0.5.tar.gz
+* cd geoipsets-0.5
 * cp build-country-sets.sh /usr/local/bin/.
 * chown root:root /usr/local/bin/build-country-sets.sh
 * chmod +x /usr/local/bin/build-country-sets.sh
 
 **iptables/ipset**
 
-Create an *ipset* named *country-blacklist*.
-* ipset create country-blacklist hash:net comment
+Create 2 *ipsets* named *country-ipv4-blacklist* and *country-ipv6-blacklist*.
+* ipset create country-ipv4-blacklist hash:net comment
+* ipset create country-ipv6-blacklist hash:net family inet6 comment
 
-Insert the blacklist check at the beginning of your *iptables* rules and then persist the changes.
-* iptables --insert INPUT --match set --match-set country-blacklist src -j DROP
+Insert the blacklist check at the beginning of your *iptables/ip6tables* rules and then persist the changes.
+* iptables --insert INPUT --match set --match-set country-ipv4-blacklist src -j DROP
 * iptables-save > /etc/iptables/iptables.rules
+* ip6tables --insert INPUT --match set --match-set country-ipv6-blacklist src -j DROP
+* ip6tables-save > /etc/iptables/ip6tables.rules
 
 **nftables**
 
@@ -34,31 +40,36 @@ flush ruleset
 include "/etc/nftables-country.blacklist"
 table netdev filter {
 
-	set country-blacklist {
+	set country-ipv4-blacklist {
 		type ipv4_addr
 		flags interval
 		elements = $country-blacklist
 	}
-
+	set country-ipv6-blacklist {
+		type ipv6_addr
+		flags interval
+		elements = $country-ipv6-blacklist
+	}
 	chain ingress {
 		type filter hook ingress device <device> priority 0; policy accept;
-		ip saddr @country-blacklist counter drop
+		ip saddr @country-ipv4-blacklist counter drop
+		ip6 saddr @country-ipv6-blacklist counter drop
 	}
 }
 ```
 
-Install the *systemd* service and timer. The example steps below load the *nftset*. If using *iptables/ipset* replace *nftset* with *geoipset*.
+Install the *systemd* service and timer. The example steps below load the *nftset*. If using *iptables/ip6tables/ipset* replace *nftset* with *geoipset*.
 * cp nftset.service /etc/systemd/system/.
 * cp nftset.timer /etc/systemd/system/.
 * chown root:root /etc/systemd/system/nftset.service /etc/systemd/system/nftset.timer
-* modify the country list passed to *nftset.service* to suite your needs
+* modify the country list passed to *nftset.service* to suit your needs
 * systemctl start nftset.timer
 * systemctl enable nftset.timer
 
-Execute the service once manually to initially populate the *country-blacklist* set.
+Execute the service once manually to initially populate the *country-ipv4-blacklist* and *country-ipv6-blacklist* sets.
 * systemctl start nftset.service
 
-Enable the relevant network *wait* service. If using *systemd-networkd*:
+Enable the relevant network *wait* service. If using *systemd-networkd* for network setup:
 * systemctl start systemd-networkd-wait-online.service
 * systemctl enable systemd-networkd-wait-online.service
 

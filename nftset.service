@@ -7,8 +7,9 @@ After=nftables.service network-online.target
 StandardError=journal
 Type=oneshot
 
-# backup existing set: 'country-blacklist'
-ExecStart=/usr/bin/mv /etc/nftables-country.blacklist /etc/nftables-country.blacklist.bak
+# backup existing sets: 'country-ipv4-blacklist' 'country-ipv6-blacklist'
+ExecStart=/usr/bin/mv /etc/nftables-ipv4-country.blacklist /etc/nftables-ipv4-country.blacklist.bak
+ExecStart=/usr/bin/mv /etc/nftables-ipv6-country.blacklist /etc/nftables-ipv6-country.blacklist.bak
 
 # refresh geoip set for countries we want to block: currently only Russia
 ExecStart=/usr/local/bin/build-country-sets.sh nftables Russia
