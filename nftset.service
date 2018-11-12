@@ -1,6 +1,6 @@
 [Unit]
 Description=Refresh nft ipset
-Requires=nftables.service network-online.target
+Wants=nftables.service network-online.target
 After=nftables.service network-online.target
 
 [Service]
