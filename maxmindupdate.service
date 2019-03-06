@@ -1,0 +1,11 @@
+[Unit]
+Description=Update MaxMind geolocation data
+Wants=network.target network-online.target
+After=network.target network-online.target
+
+[Service]
+WorkingDirectory=/usr/local/share
+StandardError=journal
+Type=oneshot
+
+ExecStart=/usr/local/bin/build-country-sets.sh

@@ -1,5 +1,5 @@
 [Unit]
-Description=Monthly geo ipset refresh
+Description=Monthly refresh of MaxMind geolocation data
 
 [Timer]
 #OnCalendar=monthly
