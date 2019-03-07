@@ -11,8 +11,7 @@ Installation
 Install the Bash script to your system.
 * curl --remote-name --location https://github.com/chr0mag/geoipsets/archive/v1.0.tar.gz
 * tar -zxvf v1.0.tar.gz
-* cd geoipsets-1.0
-* cp build-country-sets.sh /usr/local/bin/.
+* cp geoipsets-1.0/build-country-sets.sh /usr/local/bin/.
 * chown root:root /usr/local/bin/build-country-sets.sh
 * chmod +x /usr/local/bin/build-country-sets.sh
 
@@ -28,8 +27,7 @@ geoipsets
 ```
 However, MaxMind data is updated regularly so it's preferable to execute a monthly task to retrieve the latest data. Install the *systemd* service and timer:
 ```
-cp maxmindupdate.service /etc/systemd/system/.
-cp maxmindupdate.timer /etc/systemd/system/.
+cp geoipsets-1.0/maxmindupdate.* /etc/systemd/system/.
 chown root:root /etc/systemd/system/maxmindupdate.service /etc/systemd/system/maxmindupdate.timer
 systemctl start maxmindupdate.timer && systemctl enable maxmindupdate.timer
 ```
@@ -155,7 +153,7 @@ or...
 ```
 # /etc/systemd/system/maxmindupdate.service.d/override.conf
 [Service]
-ExecStart=/usr/bin/nft --file /usr/local/share/refresh-sets.nft
+ExecStart=/usr/bin/nft --file /usr/local/bin/refresh-sets.nft
 ```
 Where *refresh-sets.nft* contains the *nft* commands listed above.
 
