@@ -26,7 +26,7 @@ geoipsets
     ├── ipv4
     └── ipv6
 ```
-However, MaxMind data is updated monthly so it's preferable to automate script execution monthly to retrieve the latest data. Install the *systemd* service and timer:
+However, MaxMind data is updated regularly so it's preferable to execute a monthly task to retrieve the latest data. Install the *systemd* service and timer:
 ```
 cp maxmindupdate.service /etc/systemd/system/.
 cp maxmindupdate.timer /etc/systemd/system/.
@@ -34,16 +34,19 @@ chown root:root /etc/systemd/system/maxmindupdate.service /etc/systemd/system/ma
 systemctl start maxmindupdate.timer && systemctl enable maxmindupdate.timer
 ```
 Execute the service once manually to initially populate the set data.
-> systemctl start maxmindupdate.service
+```
+systemctl start maxmindupdate.service
+```
 Set data is placed in */usr/local/share/geoipsets* by default. You can modify the service file to change this.
 
-You may need to enable the relevant network *wait* service to avoid the script running on boot before a network connection is available. eg. f using *systemd-networkd* for network management:
-> systemctl start systemd-networkd-wait-online.service && systemctl enable systemd-networkd-wait-online.service
+You may need to enable the relevant network *wait* service to avoid the script running on boot before a network connection is available. eg. if using *systemd-networkd* for network management:
+```
+systemctl start systemd-networkd-wait-online.service && systemctl enable systemd-networkd-wait-online.service
+```
 
 Usage
 ------
-**iptables/ipset**
-Example: blacklist all Russian ipv4 and ipv6 IPs
+**iptables/ipset** example: blacklist all Russian ipv4 and ipv6 IPs
 
 * Create and save the ipsets
 ```
@@ -58,8 +61,7 @@ iptables-save > /etc/iptables/iptables.rules
 ip6tables --insert INPUT --match set --match-set RU.ipv6 src -j DROP
 ip6tables-save > /etc/iptables/ip6tables.rules
 ```
-**nftables**
-Example: blacklist all Russian ipv4 and ipv6 IPs and all Chinese ipv6 IPs
+**nftables** example: blacklist all Russian ipv4 and ipv6 IPs and all Chinese ipv6 IPs
 
 * Include the required set files in your main *nftables* configuration file and reference the set elements variable from a rule.
 ```
@@ -97,8 +99,9 @@ Automatic Updates
 The provided *systemd* service & timer updates the set data on disk, but *nftables* and *ipset* need to be reloaded to use the updated sets.
 
 Continuing with the example above:
+
 ***ipset***
-* flush and then import the new ipsets, then save
+* flush, re-import the new ipsets, then save
 ```
 ipset flush RU.ipv4
 ipset restore --exist --file /usr/local/share/geoipsets/ipset/ipv4/RU.ipv4
@@ -108,8 +111,10 @@ ipset save --file /etc/ipset.conf
 ```
 ***nftables***
 * simply reload the ruleset
-> nft --file /etc/nftables.conf
-* or, take advantage of *nftables* dynamic rulset updates by flushing and reloading only the sets themsevles using an *nft* script:
+```
+nft --file /etc/nftables.conf
+```
+* or, take advantage of *nftables'* dynamic rulset updates by flushing and reloading only the sets themsevles using an *nft* script:
 ```
 #!/usr/bin/nft -f
 include "/usr/local/share/geoipsets/nftset/ipv4/RU.ipv4"
@@ -123,12 +128,13 @@ add element netdev filter country-ipv6-blacklist $RU.ipv6
 add element netdev filter country-ipv6-blacklist $CN.ipv6
 ```
 
-Different options exist to fully automate the monthly set updates:
+Different options exist to automate the set refresh:
 1. the above commands could be added to the provided *maxmindupdate.service* file
 2. better, override *maxmindupdate.service* with a drop in file that executes the above commands after the script is run
 3. alternatively, a *systemd.path* file could be created to watch the set directories for changes and trigger the above commands when the used sets are modified
 
 Option #2 is quite simple and would look like this:
+
 ***ipset***
 ```
 # /etc/systemd/system/maxmindupdate.service.d/override.conf
@@ -149,7 +155,6 @@ or...
 ```
 # /etc/systemd/system/maxmindupdate.service.d/override.conf
 [Service]
-#ExecStart=/usr/bin/nft --file /etc/nftables.conf
 ExecStart=/usr/bin/nft --file /usr/local/share/refresh-sets.nft
 ```
 Where *refresh-sets.nft* contains the *nft* commands listed above.
