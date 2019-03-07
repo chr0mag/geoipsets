@@ -33,7 +33,6 @@ cp maxmindupdate.timer /etc/systemd/system/.
 chown root:root /etc/systemd/system/maxmindupdate.service /etc/systemd/system/maxmindupdate.timer
 systemctl start maxmindupdate.timer && systemctl enable maxmindupdate.timer
 ```
-
 Execute the service once manually to initially populate the set data.
 > systemctl start maxmindupdate.service
 Set data is placed in */usr/local/share/geoipsets* by default. You can modify the service file to change this.
@@ -59,7 +58,6 @@ iptables-save > /etc/iptables/iptables.rules
 ip6tables --insert INPUT --match set --match-set RU.ipv6 src -j DROP
 ip6tables-save > /etc/iptables/ip6tables.rules
 ```
-
 **nftables**
 Example: blacklist all Russian ipv4 and ipv6 IPs and all Chinese ipv6 IPs
 
@@ -96,11 +94,11 @@ table netdev filter {
 
 Automatic Updates
 -----------------
-The provided *systemd* service & timer updates the set data on disk, but *nftables* and *ipset* need to be reloaded to use the new sets.
+The provided *systemd* service & timer updates the set data on disk, but *nftables* and *ipset* need to be reloaded to use the updated sets.
 
 Continuing with the example above:
 ***ipset***
-* flush and then import the new ipset
+* flush and then import the new ipsets, then save
 ```
 ipset flush RU.ipv4
 ipset restore --exist --file /usr/local/share/geoipsets/ipset/ipv4/RU.ipv4
@@ -127,7 +125,7 @@ add element netdev filter country-ipv6-blacklist $CN.ipv6
 
 Different options exist to fully automate the monthly set updates:
 1. the above commands could be added to the provided *maxmindupdate.service* file
-2. better, override *maxmindupdate.service* with a drop in file that adds the above commands after the script is run
+2. better, override *maxmindupdate.service* with a drop in file that executes the above commands after the script is run
 3. alternatively, a *systemd.path* file could be created to watch the set directories for changes and trigger the above commands when the used sets are modified
 
 Option #2 is quite simple and would look like this:
@@ -147,6 +145,14 @@ ExecStart=/usr/bin/ipset save --file /etc/ipset.conf
 [Service]
 ExecStart=/usr/bin/nft --file /etc/nftables.conf
 ```
+or...
+```
+# /etc/systemd/system/maxmindupdate.service.d/override.conf
+[Service]
+#ExecStart=/usr/bin/nft --file /etc/nftables.conf
+ExecStart=/usr/bin/nft --file /usr/local/share/refresh-sets.nft
+```
+Where *refresh-sets.nft* contains the *nft* commands listed above.
 
 Sources
 ------------
