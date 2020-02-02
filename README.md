@@ -4,7 +4,7 @@ Bash script to generate country-specific IPv4/IPv6 network ranges consumable by 
 
 Introduction
 ------------
-This script makes use of the *GeoLite2 MaxMind* geoip data available from [https://www.maxmind.com](https://www.maxmind.com). A [https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases/](license key is required) to download the data.
+This script makes use of the *GeoLite2 MaxMind* geoip data available from [https://www.maxmind.com](https://www.maxmind.com). A [license key is required](https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases/) to download the data.
 
 Installation
 ------------
