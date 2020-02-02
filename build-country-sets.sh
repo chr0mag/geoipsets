@@ -22,18 +22,17 @@ function check_progs() {
 }
 
 # retrieve latest MaxMind GeoLite2 IP country database and checksum
-# CSV URL: http://geolite.maxmind.com/download/geoip/database/GeoLite2-Country-CSV.zip
-# MD5 URL: http://geolite.maxmind.com/download/geoip/database/GeoLite2-Country-CSV.zip.md5
+# CSV URL: https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-Country-CSV&license_key=LICENSE_KEY&suffix=zip
+# MD5 URL: https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-Country-CSV&license_key=LICENSE_KEY&suffix=zip.md5
 function download_geolite2_data() {
-  local BASE_URL="http://geolite.maxmind.com/download/geoip/database/"
   local ZIPPED_FILE="GeoLite2-Country-CSV.zip"
   local MD5_FILE="${ZIPPED_FILE}.md5"
-  local CSV_URL="${BASE_URL}${ZIPPED_FILE}"
-  local MD5_URL="${BASE_URL}${MD5_FILE}"
+  local CSV_URL="https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-Country-CSV&license_key=${LICENSE_KEY}&suffix=zip"
+  local MD5_URL="${CSV_URL}.md5"
 
   # download files
-  curl --silent --location --remote-name $CSV_URL || error "Failed to download: $CSV_URL"
-  curl --silent --location --remote-name $MD5_URL || error "Failed to download: $MD5_URL"
+  curl --silent --location --output $ZIPPED_FILE "$CSV_URL" || error "Failed to download: $CSV_URL"
+  curl --silent --location --output $MD5_FILE "$MD5_URL" || error "Failed to download: $MD5_URL"
 
   # validate checksum
   # .md5 file is not in expected format so 'md5sum --check $MD5_FILE' doesn't work
@@ -192,7 +191,29 @@ function build_ipv6_sets {
   done
 }
 
+# accept an optional -k switch with argument
 function main() {
+  
+  # get license key
+  source /etc/bcs.conf > /dev/null 2>&1
+  local usage="Usage: ./build-country-sets.sh [-k <LICENSE_KEY>]" 
+  while getopts ":k:" opt; do
+    case ${opt} in
+      k )
+	[[ ! -z "${OPTARG}" ]] && LICENSE_KEY=$OPTARG || error "$usage"
+	;;
+      \? ) 
+	error "$usage"
+	;;
+      : )
+	error "$usage"
+	;;
+    esac
+  done
+  shift $((OPTIND -1))
+
+  [[ -z "${LICENSE_KEY}" ]] && error "No valid license key provided."
+
   # setup
   check_progs
   export TEMPDIR=$(mktemp --directory)

@@ -1,9 +1,8 @@
 [Unit]
-Description=Monthly refresh of MaxMind geolocation data
+Description=Weekly refresh of MaxMind geolocation data
 
 [Timer]
-#OnCalendar=monthly
-OnCalendar=Tue *-*-1..7 22:00:00
+OnCalendar=Tue *-*-* 22:00:00
 RandomizedDelaySec=600
 Persistent=true
  

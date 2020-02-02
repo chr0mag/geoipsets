@@ -4,18 +4,29 @@ Bash script to generate country-specific IPv4/IPv6 network ranges consumable by 
 
 Introduction
 ------------
-This script makes use of the *GeoLite2 MaxMind* geoip data. This solution was built and tested in Arch Linux and may require distro-specific modifications.
+This script makes use of the *GeoLite2 MaxMind* geoip data available from [https://www.maxmind.com](https://www.maxmind.com). A [https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases/](license key is required) to download the data.
 
 Installation
 ------------
 Install the Bash script to your system.
-* curl --remote-name --location https://github.com/chr0mag/geoipsets/archive/v1.0.tar.gz
-* tar -zxvf v1.0.tar.gz
-* cp geoipsets-1.0/build-country-sets.sh /usr/local/bin/.
+* curl --remote-name --location https://github.com/chr0mag/geoipsets/archive/v1.1.tar.gz
+* tar -zxvf v1.1.tar.gz
+* cp geoipsets-1.1/build-country-sets.sh /usr/local/bin/.
 * chown root:root /usr/local/bin/build-country-sets.sh
 * chmod +x /usr/local/bin/build-country-sets.sh
 
-Executing the script manually will create a directory with the following hierarchy in the current working directory:
+Execution
+------------
+The license key can be provided either as a command line argument using the '-k' switch, or via the /etc/bcs.conf configuration file with the following format:
+```
+LICENSE_KEY=YOUR_KEY
+```
+To execute the script with and without a configuration file:
+* ./build-country-sets.sh
+* ./build-country-sets.sh -k YOUR_LICENSE_KEY
+
+The command line option takes precedence.
+Manual execution will create a directory with the following hierarchy in the current working directory:
 ```
 geoipsets
 ├── ipset
@@ -25,9 +36,11 @@ geoipsets
     ├── ipv4
     └── ipv6
 ```
-However, MaxMind data is updated regularly so it's preferable to execute a monthly task to retrieve the latest data. Install the *systemd* service and timer:
+Updates
+-----------
+GeoLite2 data is updated regularly so it's preferable to execute a weekly task to retrieve the latest data. Install and configure the *systemd* service and timer:
 ```
-cp geoipsets-1.0/maxmindupdate.* /etc/systemd/system/.
+cp geoipsets-1.1/maxmindupdate.* /etc/systemd/system/.
 chown root:root /etc/systemd/system/maxmindupdate.service /etc/systemd/system/maxmindupdate.timer
 systemctl start maxmindupdate.timer && systemctl enable maxmindupdate.timer
 ```
@@ -92,7 +105,7 @@ table netdev filter {
 }
 ```
 
-Automatic Updates
+Automatic Firewall Updates
 -----------------
 The provided *systemd* service & timer updates the set data on disk, but *nftables* and *ipset* need to be reloaded to use the updated sets.
 
@@ -160,8 +173,8 @@ Where *refresh-sets.nft* contains the *nft* commands listed above.
 Sources
 ------------
 * http://ipset.netfilter.org/
+* https://dev.maxmind.com/geoip/geoipupdate/#Direct_Downloads
 * https://dev.maxmind.com/geoip/geoip2/geolite2/
-* https://dev.maxmind.com/geoip/geoip2/whats-new-in-geoip2/
 * https://superuser.com/questions/997426/is-there-any-other-way-to-get-iptables-to-filter-ip-addresses-based-on-geolocati#997437
 * https://wiki.archlinux.org/index.php/Nftables
 * https://wiki.nftables.org/wiki-nftables/index.php/Main_Page
