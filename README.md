@@ -9,9 +9,9 @@ This script makes use of the *GeoLite2 MaxMind* geoip data available from [https
 Installation
 ------------
 Install the Bash script to your system.
-* curl --remote-name --location https://github.com/chr0mag/geoipsets/archive/v1.1.tar.gz
-* tar -zxvf v1.1.tar.gz
-* cp geoipsets-1.1/build-country-sets.sh /usr/local/bin/.
+* curl --remote-name --location https://github.com/chr0mag/geoipsets/archive/v1.2.tar.gz
+* tar -zxvf v1.2.tar.gz
+* cp geoipsets-1.2/build-country-sets.sh /usr/local/bin/.
 * chown root:root /usr/local/bin/build-country-sets.sh
 * chmod +x /usr/local/bin/build-country-sets.sh
 
@@ -40,7 +40,7 @@ Updates
 -----------
 GeoLite2 data is updated regularly so it's preferable to execute a weekly task to retrieve the latest data. Install and configure the *systemd* service and timer:
 ```
-cp geoipsets-1.1/maxmindupdate.* /etc/systemd/system/.
+cp geoipsets-1.2/maxmindupdate.* /etc/systemd/system/.
 chown root:root /etc/systemd/system/maxmindupdate.service /etc/systemd/system/maxmindupdate.timer
 systemctl start maxmindupdate.timer && systemctl enable maxmindupdate.timer
 ```
