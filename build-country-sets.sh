@@ -105,7 +105,7 @@ function build_ipv4_sets {
 
     #create ipset file if it doesn't exist
     if [[ ! -f $IPSET_FILE ]]; then
-      echo "create $SET_NAME hash:net maxelem 131070 comment" > $IPSET_FILE
+      echo "create $SET_NAME hash:net maxelem 131072 comment" > $IPSET_FILE
     fi
     echo "add ${SET_NAME} ${SUBNET} comment ${CC}" >> $IPSET_FILE
 
