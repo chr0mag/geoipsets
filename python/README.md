@@ -8,7 +8,7 @@ Python 3.8 or newer is required.
 
 Usage
 ------
-Utility output can be controlled using a configuration file. For the MaxMind provider type, this configuration file is required in order to provide the license-key. See the [example](https://github.com/chr0mag/geoipsets/python/geoipsets.conf) for details. 
+Utility output can be controlled using a configuration file. For the MaxMind provider type, this configuration file is required in order to provide the license-key. See the [example](https://github.com/chr0mag/geoipsets/blob/master/python/geoipsets.conf) for details. 
 
 The example file enables all options which is likely not what you want as it will generate IPv4 and IPv6 sets for both firewall types for all countries. 
 
