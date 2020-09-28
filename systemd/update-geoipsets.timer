@@ -1,5 +1,5 @@
 [Unit]
-Description=Weekly refresh of MaxMind geolocation data
+Description=Weekly geoipset refresh
 
 [Timer]
 OnCalendar=Tue *-*-* 22:00:00

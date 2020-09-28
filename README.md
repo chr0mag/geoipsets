@@ -1,54 +1,28 @@
 Geo IP sets
 ============
-Bash script to generate country-specific IPv4/IPv6 network ranges consumable by both *iptables/ipset* and *nftables*. Also included is a *systemd* service and timer to periodically update the IP sets.
+Utility to generate country-specific IPv4/IPv6 network ranges consumable by both *iptables/ipset* and *nftables*. Also included is a *systemd* service and timer to periodically update the IP sets.
 
 Introduction
 ------------
 This script makes use of the *GeoLite2 MaxMind* geoip data available from [https://www.maxmind.com](https://www.maxmind.com). A [license key is required](https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases/) to download the data.
 
-Installation
-------------
-Install the Bash script to your system.
-* curl --remote-name --location https://github.com/chr0mag/geoipsets/archive/v1.2.tar.gz
-* tar -zxvf v1.2.tar.gz
-* cp geoipsets-1.2/build-country-sets.sh /usr/local/bin/.
-* chown root:root /usr/local/bin/build-country-sets.sh
-* chmod +x /usr/local/bin/build-country-sets.sh
+There is both a [Bash version](https://github.com/chr0mag/geoipsets/bash/README.md) and a [Python version](https://github.com/chr0mag/geoipsets/python/README.md) of the utility. The Python version is more flexible (and faster) so choose this unless the host on which you plan to run the utility doesn't have a Python stack installed (or you're just really into Bash).
 
-Execution
-------------
-The license key can be provided either as a command line argument using the '-k' switch, or via the /etc/bcs.conf configuration file with the following format:
-```
-LICENSE_KEY=YOUR_KEY
-```
-To execute the script with and without a configuration file:
-* ./build-country-sets.sh
-* ./build-country-sets.sh -k YOUR_LICENSE_KEY
+The remaining instructions below apply equally to the Bash and Python versions.
 
-The command line option takes precedence.
-Manual execution will create a directory with the following hierarchy in the current working directory:
-```
-geoipsets
-├── ipset
-│   ├── ipv4
-│   └── ipv6
-└── nftset
-    ├── ipv4
-    └── ipv6
-```
 Updates
 -----------
 GeoLite2 data is updated regularly so it's preferable to execute a weekly task to retrieve the latest data. Install and configure the *systemd* service and timer:
 ```
-cp geoipsets-1.2/maxmindupdate.* /etc/systemd/system/.
-chown root:root /etc/systemd/system/maxmindupdate.service /etc/systemd/system/maxmindupdate.timer
-systemctl start maxmindupdate.timer && systemctl enable maxmindupdate.timer
+cp geoipsets-2.0/update-geoipsets.* /etc/systemd/system/.
+chown root:root /etc/systemd/system/update-geoipsets.service /etc/systemd/system/update-geoipsets.timer
+systemctl start update-geoipsets.timer && systemctl enable update-geoipsets.timer
 ```
 Execute the service once manually to initially populate the set data.
 ```
-systemctl start maxmindupdate.service
+systemctl start update-geoipsets.service
 ```
-Set data is placed in */usr/local/share/geoipsets* by default. You can modify the service file to change this.
+Set data is placed in */usr/local/share/* by default. You can modify the service file to change this.
 
 You may need to enable the relevant network *wait* service to avoid the script running on boot before a network connection is available. eg. if using *systemd-networkd* for network management:
 ```
@@ -61,8 +35,8 @@ Usage
 
 * Create and save the ipsets
 ```
-ipset restore --file /usr/local/share/geoipsets/ipset/ipv4/RU.ipv4
-ipset restore --file /usr/local/share/geoipsets/ipset/ipv6/RU.ipv6
+ipset restore --file /usr/local/share/geoipsets/maxmind/ipset/ipv4/RU.ipv4
+ipset restore --file /usr/local/share/geoipsets/maxmind/ipset/ipv6/RU.ipv6
 ipset save --file /etc/ipset.conf
 ```
 * Reference the ipsets from *iptables/ip6tables* rules and then save
@@ -79,9 +53,9 @@ ip6tables-save > /etc/iptables/ip6tables.rules
 #!/usr/bin/nft -f
 flush ruleset
 
-include "/usr/local/share/geoipsets/nftset/ipv4/RU.ipv4"
-include "/usr/local/share/geoipsets/nftset/ipv6/CN.ipv6"
-include "/usr/local/share/geoipsets/nftset/ipv6/RU.ipv6"
+include "/usr/local/share/geoipsets/maxmind/nftset/ipv4/RU.ipv4"
+include "/usr/local/share/geoipsets/maxmind/nftset/ipv6/CN.ipv6"
+include "/usr/local/share/geoipsets/maxmind/nftset/ipv6/RU.ipv6"
 
 table netdev filter {
 
@@ -115,9 +89,9 @@ Continuing with the example above:
 * flush, re-import the new ipsets, then save
 ```
 ipset flush RU.ipv4
-ipset restore --exist --file /usr/local/share/geoipsets/ipset/ipv4/RU.ipv4
+ipset restore --exist --file /usr/local/share/geoipsets/maxmind/ipset/ipv4/RU.ipv4
 ipset flush RU.ipv6
-ipset restore --exist --file /usr/local/share/geoipsets/ipset/ipv6/RU.ipv6
+ipset restore --exist --file /usr/local/share/geoipsets/maxmind/ipset/ipv6/RU.ipv6
 ipset save --file /etc/ipset.conf
 ```
 ***nftables***
@@ -128,9 +102,9 @@ nft --file /etc/nftables.conf
 * or, take advantage of *nftables'* dynamic rulset updates by flushing and reloading only the sets themsevles using an *nft* script:
 ```
 #!/usr/bin/nft -f
-include "/usr/local/share/geoipsets/nftset/ipv4/RU.ipv4"
-include "/usr/local/share/geoipsets/nftset/ipv6/CN.ipv6"
-include "/usr/local/share/geoipsets/nftset/ipv6/RU.ipv6"
+include "/usr/local/share/geoipsets/maxmind/nftset/ipv4/RU.ipv4"
+include "/usr/local/share/geoipsets/maxmind/nftset/ipv6/CN.ipv6"
+include "/usr/local/share/geoipsets/maxmind/nftset/ipv6/RU.ipv6"
 
 flush set netdev filter country-ipv4-blacklist
 add element netdev filter country-ipv4-blacklist $RU.ipv4
@@ -140,36 +114,49 @@ add element netdev filter country-ipv6-blacklist $CN.ipv6
 ```
 
 Different options exist to automate the set refresh:
-1. the above commands could be added to the provided *maxmindupdate.service* file
-2. better, override *maxmindupdate.service* with a drop in file that executes the above commands after the script is run
+1. the above commands could be added to the provided *update-geoipsets.service* file
+2. better, override *update-geoipsets.service* with a drop in file that executes the above commands after the script is run
 3. alternatively, a *systemd.path* file could be created to watch the set directories for changes and trigger the above commands when the used sets are modified
 
 Option #2 is quite simple and would look like this:
 
 ***ipset***
 ```
-# /etc/systemd/system/maxmindupdate.service.d/override.conf
+# /etc/systemd/system/update-geoipsets.service.d/override.conf
 [Service]
 ExecStart=/usr/bin/ipset flush RU.ipv4
-ExecStart=/usr/bin/ipset restore --exist --file /usr/local/share/geoipsets/ipset/ipv4/RU.ipv4
+ExecStart=/usr/bin/ipset restore --exist --file /usr/local/share/geoipsets/maxmind/ipset/ipv4/RU.ipv4
 ExecStart=/usr/bin/ipset flush RU.ipv6
-ExecStart=/usr/bin/ipset restore --exist --file /usr/local/share/geoipsets/ipset/ipv6/RU.ipv6
+ExecStart=/usr/bin/ipset restore --exist --file /usr/local/share/geoipsets/maxmind/ipset/ipv6/RU.ipv6
 ExecStart=/usr/bin/ipset save --file /etc/ipset.conf
 ```
 ***nftables***
 ```
-# /etc/systemd/system/maxmindupdate.service.d/override.conf
+# /etc/systemd/system/update-geoipsets.service.d/override.conf
 [Service]
 ExecStart=/usr/bin/nft --file /etc/nftables.conf
 ```
 or...
 ```
-# /etc/systemd/system/maxmindupdate.service.d/override.conf
+# /etc/systemd/system/update-geoipsets.service.d/override.conf
 [Service]
 ExecStart=/usr/bin/nft --file /usr/local/bin/refresh-sets.nft
 ```
 Where *refresh-sets.nft* contains the *nft* commands listed above.
 
+
+Performance
+-----------
+The Python version is consistently over twice as fast as the Bash version when generating sets for both firewall types and both address families.
+```
+# BASH
+% time bash build-country-sets.sh 
+bash build-country-sets.sh  34.18s user 22.12s system 108% cpu 52.121 total
+
+#PYTHON
+% time python ~/Git/geoipsets/python/geoipsets/geoipsets.py
+python ~/Git/geoipsets/python/geoipsets/geoipsets.py  13.88s user 4.48s system 89% cpu 20.614 total
+```
 Sources
 ------------
 * http://ipset.netfilter.org/

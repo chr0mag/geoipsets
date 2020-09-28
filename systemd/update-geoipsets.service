@@ -1,5 +1,5 @@
 [Unit]
-Description=Update MaxMind geolocation data
+Description=Update geoipsets
 Wants=network.target network-online.target
 After=network.target network-online.target
 
@@ -8,4 +8,5 @@ WorkingDirectory=/usr/local/share
 StandardError=journal
 Type=oneshot
 
-ExecStart=/usr/local/bin/build-country-sets.sh
+ExecStart=/usr/bin/geoipsets
+#ExecStart=/usr/local/bin/build-country-sets.sh
