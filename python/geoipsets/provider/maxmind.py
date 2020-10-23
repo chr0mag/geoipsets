@@ -125,8 +125,10 @@ class MaxMindProvider(Provider):
         nftset_dir = self.base_dir + '/nftset/' + addr_fam.value + '/'
         if addr_fam == AddressFamily.IPV4:
             ip_blocks = 'GeoLite2-Country-Blocks-IPv4.csv'
+            ipset_family = "inet"
         else:  # AddressFamily.IPV6
             ip_blocks = 'GeoLite2-Country-Blocks-IPv6.csv'
+            ipset_family = "inet6"
 
         # remove old sets if they exist
         if os.path.isdir(ipset_dir):
@@ -166,7 +168,7 @@ class MaxMindProvider(Provider):
                         ipset_file = ipset_dir + set_name
                         if not os.path.isfile(ipset_file):
                             with open(ipset_file, 'a') as f:
-                                f.write("create " + set_name + " hash:net maxelem 131072 comment\n")
+                                f.write("create " + set_name + " hash:net family " + ipset_family + " maxelem 131072 comment\n")
 
                         with open(ipset_file, 'a') as f:
                             f.write("add " + set_name + " " + net + " comment " + cc + "\n")
