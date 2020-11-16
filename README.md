@@ -16,7 +16,7 @@ Updates
 -----------
 Data is updated regularly so it's preferable to execute a weekly task to retrieve the latest geo IP sets. Install and configure the *systemd* service and timer:
 ```
-cp geoipsets-2.0/update-geoipsets.* /etc/systemd/system/.
+cp geoipsets-2.1/update-geoipsets.* /etc/systemd/system/.
 chown root:root /etc/systemd/system/update-geoipsets.service /etc/systemd/system/update-geoipsets.timer
 systemctl start update-geoipsets.timer && systemctl enable update-geoipsets.timer
 ```
