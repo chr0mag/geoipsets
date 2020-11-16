@@ -27,7 +27,7 @@ class MaxMindProvider(Provider):
             raise RuntimeError("License key cannot be empty")
 
         self.license_key = license_key
-        self.base_dir = 'geoipsets/maxmind'  # TODO: make this static?
+        self.base_dir = 'geoipsets/maxmind'
 
     def generate(self):
         zip_file = self.download()  # comment out for testing
@@ -60,9 +60,6 @@ class MaxMindProvider(Provider):
         # download latest ZIP file
         # TODO catch URLError and HTTPError? eg. https://docs.python.org/3/howto/urllib2.html
         with request.urlopen(zip_url) as http_response:
-            # TODO regex would be more precise here, but do we even care about the filename?
-            # filename = str(http_response.info().get('Content-Disposition')).split('=')[1]
-            # print("Downloaded file: ", filename)
             with NamedTemporaryFile(suffix=".zip", delete=False) as zip_file:
                 shutil.copyfileobj(http_response, zip_file)
                 zip_file.seek(0)
@@ -79,8 +76,6 @@ class MaxMindProvider(Provider):
                 md5_file.seek(0)
                 expected_md5sum = md5_file.read().decode('utf-8')
 
-        # print("Expected md5 hash: ", expected_md5sum)
-        # print("Calculated md5 hash:", md5_hash.hexdigest())
         computed_md5sum = md5_hash.hexdigest()
 
         # compare downloaded md5 hash with computed version
@@ -104,7 +99,6 @@ class MaxMindProvider(Provider):
         country_code_map = dict()
         with ZipFile(Path(zip_ref.filename), 'r') as zip_file:
             with zip_file.open(dir_prefix + locations, 'r') as csv_file_bytes:
-                # print("Locations filename: ", csv_file_bytes)
                 rows = DictReader(TextIOWrapper(csv_file_bytes))
                 for r in rows:
                     if cc := r['country_iso_code']:
@@ -125,8 +119,10 @@ class MaxMindProvider(Provider):
         nftset_dir = self.base_dir + '/nftset/' + addr_fam.value + '/'
         if addr_fam == AddressFamily.IPV4:
             ip_blocks = 'GeoLite2-Country-Blocks-IPv4.csv'
+            inet_family = 'family inet'
         else:  # AddressFamily.IPV6
             ip_blocks = 'GeoLite2-Country-Blocks-IPv6.csv'
+            inet_family = 'family inet6'
 
         # remove old sets if they exist
         if os.path.isdir(ipset_dir):
@@ -142,7 +138,6 @@ class MaxMindProvider(Provider):
 
         with ZipFile(Path(zip_ref.filename), 'r') as zip_file:
             with zip_file.open(dir_prefix + ip_blocks, 'r') as csv_file_bytes:
-                # print("IP blocks filename: ", csv_file_bytes)
                 rows = DictReader(TextIOWrapper(csv_file_bytes))
                 for r in rows:
                     geo_id = r['geoname_id']
@@ -166,7 +161,7 @@ class MaxMindProvider(Provider):
                         ipset_file = ipset_dir + set_name
                         if not os.path.isfile(ipset_file):
                             with open(ipset_file, 'a') as f:
-                                f.write("create " + set_name + " hash:net maxelem 131072 comment\n")
+                                f.write("create " + set_name + " hash:net " + inet_family + " maxelem 131072 comment\n")
 
                         with open(ipset_file, 'a') as f:
                             f.write("add " + set_name + " " + net + " comment " + cc + "\n")
