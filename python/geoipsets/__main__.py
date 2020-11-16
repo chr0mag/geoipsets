@@ -4,7 +4,9 @@ from argparse import ArgumentParser
 from configparser import ConfigParser, MissingSectionHeaderError
 from pathlib import Path
 
-from geoipsets import MaxMindProvider, AddressFamily, Firewall
+from .provider.maxmind import MaxMindProvider
+from .provider.dbip import DbIpProvider
+from .provider.provider import AddressFamily, Firewall
 
 
 def get_conf_file():
@@ -39,9 +41,8 @@ def get_config():
     # conf_file_path = get_conf_file()
 
     # set defaults
-    # TODO change default provider to dbip
     default_options = dict()
-    default_options['provider'] = 'maxmind'
+    default_options['provider'] = 'dbip'
     default_options['firewall'] = {Firewall.NF_TABLES, Firewall.IP_TABLES}
     default_options['address-family'] = {AddressFamily.IPV4, AddressFamily.IPV6}
     default_options['countries'] = 'all'
@@ -78,8 +79,14 @@ def get_config():
 
 def main():
     opts = get_config()
-    mmp = MaxMindProvider(opts.get('firewall'), opts.get('address-family'), opts.get('countries'), opts.get('maxmind'))
-    mmp.generate()
+    providers = opts.get('provider')
+    if "maxmind" in providers:
+        mmp = MaxMindProvider(opts.get('firewall'), opts.get('address-family'), opts.get('countries'), opts.get('maxmind'))
+        mmp.generate()
+
+    if "dbip" in providers:
+        dbipp = DbIpProvider(opts.get('firewall'), opts.get('address-family'), opts.get('countries'))
+        dbipp.generate()
 
 
 if __name__ == "__main__":

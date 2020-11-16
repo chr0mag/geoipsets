@@ -13,7 +13,7 @@ README = (HERE / "README.md").read_text()
 # This call to setup() does all the work
 setup(
     name="geoipsets",
-    version="2.0",
+    version="2.1",
     description="Utility to build country-specific IP sets for ipset/iptables and nftables.",
     long_description=README,
     long_description_content_type="text/markdown",
@@ -26,6 +26,7 @@ setup(
     ],
     packages=find_packages(),
     include_package_data=True,
+    install_requires=["requests"],
     entry_points={
         "console_scripts": [
             "geoipsets=geoipsets.__main__:main",

@@ -4,15 +4,17 @@ Utility to generate country-specific IPv4/IPv6 network ranges consumable by both
 
 Introduction
 ------------
-This script makes use of the *GeoLite2 MaxMind* geoip data available from [https://www.maxmind.com](https://www.maxmind.com). A [license key is required](https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases/) to download the data.
-
 There is both a [Bash version](https://github.com/chr0mag/geoipsets/blob/master/bash/README.md) and a [Python version](https://github.com/chr0mag/geoipsets/blob/master/python/README.md) of the utility. The Python version is more flexible (and faster) so choose this unless the host on which you plan to run the utility doesn't have a Python stack installed (or you're just really into Bash).
 
-The remaining instructions below apply equally to the Bash and Python versions.
+This Python version supports 2 dataset providers: [dbip](https://db-ip.com/) and [MaxMind](https://www.maxmind.com). The Bash version only supports MaxMind. 
+
+If you use MaxMind a [license key is required](https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases/) to download the data.
+
+The remaining instructions apply equally to the Bash and Python versions.
 
 Updates
 -----------
-GeoLite2 data is updated regularly so it's preferable to execute a weekly task to retrieve the latest data. Install and configure the *systemd* service and timer:
+Data is updated regularly so it's preferable to execute a weekly task to retrieve the latest geo IP sets. Install and configure the *systemd* service and timer:
 ```
 cp geoipsets-2.0/update-geoipsets.* /etc/systemd/system/.
 chown root:root /etc/systemd/system/update-geoipsets.service /etc/systemd/system/update-geoipsets.timer
@@ -153,9 +155,13 @@ The Python version is consistently over twice as fast as the Bash version when g
 % time bash build-country-sets.sh 
 bash build-country-sets.sh  34.18s user 22.12s system 108% cpu 52.121 total
 
-#PYTHON
-% time python ~/Git/geoipsets/python/geoipsets/geoipsets.py
-python ~/Git/geoipsets/python/geoipsets/geoipsets.py  13.88s user 4.48s system 89% cpu 20.614 total
+#PYTHON (maxmind)
+% time python -m geoipsets    
+python -m geoipsets  15.16s user 7.18s system 91% cpu 24.345 total
+
+#PYTHON (dbip)
+% time python -m geoipsets    
+python -m geoipsets  14.25s user 0.14s system 91% cpu 15.690 total
 ```
 Sources
 ------------
