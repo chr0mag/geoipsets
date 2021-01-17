@@ -13,16 +13,18 @@ README = (HERE / "README.md").read_text()
 # This call to setup() does all the work
 setup(
     name="geoipsets",
-    version="2.1",
+    version="2.1.1",
     description="Utility to build country-specific IP sets for ipset/iptables and nftables.",
     long_description=README,
     long_description_content_type="text/markdown",
     url="https://github.com/chr0mag/geoipsets",
     license="GPLv3",
     classifiers=[
+        "Operating System :: POSIX :: Linux",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
     ],
     packages=find_packages(),
     include_package_data=True,
