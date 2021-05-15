@@ -81,11 +81,16 @@ def main():
     opts = get_config()
     providers = opts.get('provider')
     if "maxmind" in providers:
-        mmp = MaxMindProvider(opts.get('firewall'), opts.get('address-family'), opts.get('countries'), opts.get('maxmind'))
+        mmp = MaxMindProvider(opts.get('firewall'),
+                              opts.get('address-family'),
+                              opts.get('countries'),
+                              opts.get('maxmind'))
         mmp.generate()
 
     if "dbip" in providers:
-        dbipp = DbIpProvider(opts.get('firewall'), opts.get('address-family'), opts.get('countries'))
+        dbipp = DbIpProvider(opts.get('firewall'),
+                             opts.get('address-family'),
+                             opts.get('countries'))
         dbipp.generate()
 
 

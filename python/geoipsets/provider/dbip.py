@@ -64,7 +64,7 @@ class DbIpProvider(Provider):
         country_subnets = dict()
 
         with gzip.GzipFile(gzip_ref, 'rb') as csv_file_bytes:
-        # with gzip.GzipFile('/tmp/tmpuw3uwn8i.csv.gz', 'rb') as csv_file_bytes:
+            # with gzip.GzipFile('/tmp/tmpuw3uwn8i.csv.gz', 'rb') as csv_file_bytes:
             rows = DictReader(TextIOWrapper(csv_file_bytes), fieldnames=("ip_start", "ip_end", "country"))
             for r in rows:
                 cc = r['country']
