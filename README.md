@@ -1,3 +1,5 @@
+![badge](https://github.com/chr0mag/geoipsets/actions/workflows/python-tests.yaml/badge.svg)
+
 Geo IP sets
 ============
 Utility to generate country-specific IPv4/IPv6 network ranges consumable by both *iptables/ipset* and *nftables*. Also included is a *systemd* service and timer to periodically update the IP sets.
