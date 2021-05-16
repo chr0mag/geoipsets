@@ -4,3 +4,4 @@ python/geoipsets.egg-info
 python/build
 **/__pycache__
 **/setup.py.REAL
+.pre-commit-config.yaml

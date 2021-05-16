@@ -33,7 +33,7 @@ class MaxMindProvider(Provider):
         zip_file = self.download()  # comment out for testing
 
         with ZipFile(Path(zip_file.name), 'r') as zip_ref:
-        # with ZipFile(Path("/tmp/tmpxwunp8fw.zip"), 'r') as zip_ref:  # replace line above with this for testing
+            # with ZipFile(Path("/tmp/tmpxwunp8fw.zip"), 'r') as zip_ref:  # replace line above with this for testing
             zip_dir_prefix = os.path.commonprefix(zip_ref.namelist())
             cc_map = self.build_map(zip_ref, zip_dir_prefix)
 
@@ -148,7 +148,7 @@ class MaxMindProvider(Provider):
 
                     try:
                         cc = country_code_map[geo_id]
-                    except KeyError as ex:
+                    except KeyError:
                         continue  # skip CC if not listed in the config file
 
                     net = r['network']
