@@ -6,7 +6,7 @@ Introduction
 ------------
 There is both a [Bash version](https://github.com/chr0mag/geoipsets/blob/master/bash/README.md) and a [Python version](https://github.com/chr0mag/geoipsets/blob/master/python/README.md) of the utility. The Python version is more flexible (and faster) so choose this unless the host on which you plan to run the utility doesn't have a Python stack installed (or you're just really into Bash).
 
-This Python version supports 2 dataset providers: [dbip](https://db-ip.com/) and [MaxMind](https://www.maxmind.com). The Bash version only supports MaxMind. 
+This Python version supports 2 dataset providers: [dbip](https://db-ip.com/) and [MaxMind](https://www.maxmind.com). The Bash version only supports MaxMind and is effectively legacy at this point. I continues to work but there are no plans to update it further.
 
 If you use MaxMind a [license key is required](https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases/) to download the data.
 
