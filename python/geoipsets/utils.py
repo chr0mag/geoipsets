@@ -1,4 +1,4 @@
-# provider.py
+# utils.py
 
 from abc import ABC, abstractmethod
 from enum import Enum
@@ -14,7 +14,7 @@ class AddressFamily(Enum):
     IPV6 = 'ipv6'
 
 
-class Provider(ABC):
+class AbstractProvider(ABC):
     """Abstract base class providing common functionality for all Provider types."""
 
     def __init__(self, firewall: set, address_family: set, countries: set):
