@@ -11,10 +11,10 @@ from ipaddress import ip_address, summarize_address_range
 
 import requests
 
-from .provider import Provider, AddressFamily
+from . import utils
 
 
-class DbIpProvider(Provider):
+class DbIpProvider(utils.AbstractProvider):
     """ DBIP IP range set provider. """
 
     def __init__(self, firewall: set, address_family: set, countries: set):
@@ -22,10 +22,10 @@ class DbIpProvider(Provider):
 
         self.base_dir = 'geoipsets/dbip'
 
-        ipset_dir = self.base_dir + '/ipset/' + AddressFamily.IPV4.value + '/'
-        nftset_dir = self.base_dir + '/nftset/' + AddressFamily.IPV4.value + '/'
-        ip6set_dir = self.base_dir + '/ipset/' + AddressFamily.IPV6.value + '/'
-        nft6set_dir = self.base_dir + '/nftset/' + AddressFamily.IPV6.value + '/'
+        ipset_dir = self.base_dir + '/ipset/' + utils.AddressFamily.IPV4.value + '/'
+        nftset_dir = self.base_dir + '/nftset/' + utils.AddressFamily.IPV4.value + '/'
+        ip6set_dir = self.base_dir + '/ipset/' + utils.AddressFamily.IPV6.value + '/'
+        nft6set_dir = self.base_dir + '/nftset/' + utils.AddressFamily.IPV6.value + '/'
 
         # remove/re-create old IPv4 sets if they exist
         if os.path.isdir(ipset_dir):
@@ -89,7 +89,7 @@ class DbIpProvider(Provider):
             set_name_parts = set_name.split('.')
             country_code = set_name_parts[0]
             ip_version = set_name_parts[1]
-            if ip_version == AddressFamily.IPV4.value:
+            if ip_version == utils.AddressFamily.IPV4.value:
                 inet_family = 'family inet'
             else:  # AddressFamily.IPV6
                 inet_family = 'family inet6'

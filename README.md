@@ -1,14 +1,14 @@
-![badge](https://github.com/chr0mag/geoipsets/actions/workflows/python-tests.yaml/badge.svg)
-
 geoipsets
 ============
+![badge](https://github.com/chr0mag/geoipsets/actions/workflows/python-tests.yaml/badge.svg) ![PyPI](https://img.shields.io/pypi/v/geoipsets) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/geoipsets) ![GitHub](https://img.shields.io/github/license/chr0mag/geoipsets)
+
 Utility to generate country-specific IPv4/IPv6 network ranges consumable by both *iptables/ipset* and *nftables*. Also included is a *systemd* service and timer to periodically update the IP sets.
 
 Introduction
 ------------
-There is both a [Bash version](https://github.com/chr0mag/geoipsets/blob/master/bash/README.md) and a [Python version](https://github.com/chr0mag/geoipsets/blob/master/python/README.md) of the utility. The Python version is more flexible (and faster) so choose this unless the host on which you plan to run the utility doesn't have a Python stack installed (or you're just really into Bash).
+There is both a [Bash version](https://github.com/chr0mag/geoipsets/blob/master/bash/README.md) and a [Python version](https://github.com/chr0mag/geoipsets/blob/master/python/README.md) of the utility. The Python version is more flexible (and faster) so choose this unless there is a compelling reason not to.
 
-This Python version supports 2 dataset providers: [dbip](https://db-ip.com/) and [MaxMind](https://www.maxmind.com). The Bash version only supports MaxMind and is effectively legacy at this point. I continues to work but there are no plans to update it further.
+This Python version supports 2 dataset providers: [dbip](https://db-ip.com/) and [MaxMind](https://www.maxmind.com). The Bash version only supports MaxMind and is effectively legacy at this point. It continues to work but there are no plans to update it further.
 
 If you use MaxMind a [license key is required](https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases/) to download the data.
 
@@ -18,7 +18,7 @@ Updates
 -----------
 Data is updated regularly so it's preferable to execute a weekly task to retrieve the latest geo IP sets. Install and configure the *systemd* service and timer:
 ```
-cp geoipsets-2.1/update-geoipsets.* /etc/systemd/system/.
+cp geoipsets-*/update-geoipsets.* /etc/systemd/system/.
 chown root:root /etc/systemd/system/update-geoipsets.service /etc/systemd/system/update-geoipsets.timer
 systemctl start update-geoipsets.timer && systemctl enable update-geoipsets.timer
 ```
@@ -153,7 +153,7 @@ Performance
 -----------
 The Python version is consistently over twice as fast as the Bash version when generating sets for both firewall types and both address families.
 ```
-# BASH
+# BASH (maxmind)
 % time bash build-country-sets.sh 
 bash build-country-sets.sh  34.18s user 22.12s system 108% cpu 52.121 total
 

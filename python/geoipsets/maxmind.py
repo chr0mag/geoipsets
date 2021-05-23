@@ -11,10 +11,10 @@ from tempfile import NamedTemporaryFile
 from urllib import request
 from zipfile import ZipFile
 
-from .provider import Provider, AddressFamily
+from . import utils
 
 
-class MaxMindProvider(Provider):
+class MaxMindProvider(utils.AbstractProvider):
     """MaxMind IP range set provider."""
 
     def __init__(self, firewall: set, address_family: set, countries: set, provider_options: dict):
@@ -39,10 +39,10 @@ class MaxMindProvider(Provider):
 
             # TODO: run each address-family concurrently?
             if self.ipv4:
-                self.build_sets(cc_map, zip_ref, zip_dir_prefix, AddressFamily.IPV4)
+                self.build_sets(cc_map, zip_ref, zip_dir_prefix, utils.AddressFamily.IPV4)
 
             if self.ipv6:
-                self.build_sets(cc_map, zip_ref, zip_dir_prefix, AddressFamily.IPV6)
+                self.build_sets(cc_map, zip_ref, zip_dir_prefix, utils.AddressFamily.IPV6)
 
     def download(self):
         """
@@ -108,7 +108,7 @@ class MaxMindProvider(Provider):
 
         return country_code_map
 
-    def build_sets(self, country_code_map: dict, zip_ref: ZipFile, dir_prefix: str, addr_fam: AddressFamily):
+    def build_sets(self, country_code_map: dict, zip_ref: ZipFile, dir_prefix: str, addr_fam: utils.AddressFamily):
         """
         Iterates through IP blocks and builds country-specific IP range lists.
         field names:
@@ -117,7 +117,7 @@ class MaxMindProvider(Provider):
         suffix = '.' + addr_fam.value
         ipset_dir = self.base_dir + '/ipset/' + addr_fam.value + '/'
         nftset_dir = self.base_dir + '/nftset/' + addr_fam.value + '/'
-        if addr_fam == AddressFamily.IPV4:
+        if addr_fam == utils.AddressFamily.IPV4:
             ip_blocks = 'GeoLite2-Country-Blocks-IPv4.csv'
             inet_family = 'family inet'
         else:  # AddressFamily.IPV6
