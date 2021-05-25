@@ -1,7 +1,6 @@
 # dbip.py
 
 import gzip
-import os
 import shutil
 from csv import DictReader
 from datetime import datetime
@@ -17,39 +16,38 @@ from . import utils
 class DbIpProvider(utils.AbstractProvider):
     """ DBIP IP range set provider. """
 
-    def __init__(self, firewall: set, address_family: set, countries: set):
-        super().__init__(firewall, address_family, countries)
+    def __init__(self, firewall: set, address_family: set, countries: set, output_dir: str):
+        super().__init__(firewall, address_family, countries, output_dir)
 
-        self.base_dir = 'geoipsets/dbip'
-
-        ipset_dir = self.base_dir + '/ipset/' + utils.AddressFamily.IPV4.value + '/'
-        nftset_dir = self.base_dir + '/nftset/' + utils.AddressFamily.IPV4.value + '/'
-        ip6set_dir = self.base_dir + '/ipset/' + utils.AddressFamily.IPV6.value + '/'
-        nft6set_dir = self.base_dir + '/nftset/' + utils.AddressFamily.IPV6.value + '/'
+        # ipset_dir = Path(self.base_dir + '/dbip/ipset/' + utils.AddressFamily.IPV4.value + '/')
+        ipset_dir = self.base_dir / 'dbip/ipset' / utils.AddressFamily.IPV4.value
+        nftset_dir = self.base_dir / 'dbip/nftset' / utils.AddressFamily.IPV4.value
+        ip6set_dir = self.base_dir / 'dbip/ipset' / utils.AddressFamily.IPV6.value
+        nft6set_dir = self.base_dir / 'dbip/nftset' / utils.AddressFamily.IPV6.value
 
         # remove/re-create old IPv4 sets if they exist
-        if os.path.isdir(ipset_dir):
+        if ipset_dir.is_dir():
             shutil.rmtree(ipset_dir)
 
-        if os.path.isdir(nftset_dir):
+        if nftset_dir.is_dir():
             shutil.rmtree(nftset_dir)
 
         if self.ip_tables:
-            os.makedirs(ipset_dir)
+            ipset_dir.mkdir(parents=True)
         if self.nf_tables:
-            os.makedirs(nftset_dir)
+            nftset_dir.mkdir(parents=True)
 
         # remove/re-create old IPv6 sets if they exist
-        if os.path.isdir(ip6set_dir):
+        if ip6set_dir.is_dir():
             shutil.rmtree(ip6set_dir)
 
-        if os.path.isdir(nft6set_dir):
+        if nft6set_dir.is_dir():
             shutil.rmtree(nft6set_dir)
 
         if self.ip_tables:
-            os.makedirs(ip6set_dir)
+            ip6set_dir.mkdir(parents=True)
         if self.nf_tables:
-            os.makedirs(nft6set_dir)
+            nft6set_dir.mkdir(parents=True)
 
     def generate(self):
         """
@@ -96,12 +94,12 @@ class DbIpProvider(utils.AbstractProvider):
 
             # write file headers
             if self.ip_tables:
-                ipset_path = self.base_dir + '/ipset/' + ip_version + '/' + set_name
+                ipset_path = self.base_dir / 'dbip/ipset' / ip_version / set_name
                 ipset_file = open(ipset_path, 'w')
                 ipset_file.write("create " + set_name + " hash:net " + inet_family + " maxelem 131072 comment\n")
 
             if self.nf_tables:
-                nftset_path = self.base_dir + '/nftset/' + ip_version + '/' + set_name
+                nftset_path = self.base_dir / 'dbip/nftset' / ip_version / set_name
                 nftset_file = open(nftset_path, 'w')
                 nftset_file.write("define " + set_name + " = {\n")
 

@@ -10,10 +10,13 @@ HERE = pathlib.Path(__file__).parent
 # The text of the README file
 README = (HERE / "README.md").read_text()
 
+# The text of the VERSION file
+VERSION = (HERE / 'geoipsets/VERSION').read_text()
+
 # This call to setup() does all the work
 setup(
     name="geoipsets",
-    version="2.1.1",
+    version=VERSION,
     description="Utility to build country-specific IP sets for ipset/iptables and nftables.",
     long_description=README,
     long_description_content_type="text/markdown",
@@ -26,7 +29,7 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
     ],
-    packages=find_packages(),
+    packages=find_packages(exclude=("tests",)),
     include_package_data=True,
     install_requires=["requests"],
     entry_points={

@@ -7,7 +7,6 @@ AssertPathExists=/var/local
 
 [Service]
 Type=oneshot
-WorkingDirectory=/var/local
 CapabilityBoundingSet=~CAP_SYS_ADMIN
 NoNewPrivileges=true
 ProtectProc=invisible
@@ -19,6 +18,6 @@ ReadWritePaths=/var/local /tmp
 InaccessiblePaths=-/lost+found
 NoExecPaths=/
 ExecPaths=/usr/bin/python /usr/bin/geoipsets /usr/bin/nft usr/bin/ipset /usr/lib
-ExecStart=/usr/bin/geoipsets
+ExecStart=/usr/bin/geoipsets --output-dir /var/local
 StandardOutput=journal
 StandardError=journal

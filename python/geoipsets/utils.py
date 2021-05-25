@@ -2,6 +2,7 @@
 
 from abc import ABC, abstractmethod
 from enum import Enum
+from pathlib import Path
 
 
 class Firewall(Enum):
@@ -17,12 +18,13 @@ class AddressFamily(Enum):
 class AbstractProvider(ABC):
     """Abstract base class providing common functionality for all Provider types."""
 
-    def __init__(self, firewall: set, address_family: set, countries: set):
+    def __init__(self, firewall: set, address_family: set, countries: set, output_dir: str):
         self.ipv4 = AddressFamily.IPV4.value in address_family
         self.ipv6 = AddressFamily.IPV6.value in address_family
         self.nf_tables = Firewall.NF_TABLES.value in firewall
         self.ip_tables = Firewall.IP_TABLES.value in firewall
         self.countries = countries
+        self.base_dir = Path(output_dir) / 'geoipsets'
 
         @abstractmethod
         def generate():

@@ -1,1 +1,1 @@
-include geoipsets/*.conf
+include geoipsets/VERSION
