@@ -1,12 +1,12 @@
 geoipsets
 ============
-![badge](https://github.com/chr0mag/geoipsets/actions/workflows/python-tests.yaml/badge.svg) ![PyPI](https://img.shields.io/pypi/v/geoipsets) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/geoipsets) ![GitHub](https://img.shields.io/github/license/chr0mag/geoipsets)
+![badge](https://github.com/chr0mag/geoipsets/actions/workflows/python-tests.yaml/badge.svg) ![PyPI](https://img.shields.io/pypi/v/geoipsets) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/geoipsets) ![PyPI - Downloads](https://img.shields.io/pypi/dm/geoipsets) ![GitHub](https://img.shields.io/github/license/chr0mag/geoipsets)
 
 Utility to generate country-specific IPv4/IPv6 network ranges consumable by both *iptables/ipset* and *nftables*. Also included is a *systemd* service and timer to periodically update the IP sets.
 
 Introduction
 ------------
-There is both a [Bash version](https://github.com/chr0mag/geoipsets/blob/master/bash/README.md) and a [Python version](https://github.com/chr0mag/geoipsets/blob/master/python/README.md) of the utility. The Python version is more flexible (and faster) so choose this unless there is a compelling reason not to.
+There is both a [Bash version](https://github.com/chr0mag/geoipsets/blob/main/bash/README.md) and a [Python version](https://github.com/chr0mag/geoipsets/blob/main/python/README.md) of the utility. The Python version is more flexible (and faster) so choose this unless there is a compelling reason not to.
 
 This Python version supports 2 dataset providers: [dbip](https://db-ip.com/) and [MaxMind](https://www.maxmind.com). The Bash version only supports MaxMind and is effectively legacy at this point. It continues to work but there are no plans to update it further.
 
@@ -39,8 +39,8 @@ Usage
 
 * Create and save the ipsets
 ```
-ipset restore --file /usr/local/share/geoipsets/maxmind/ipset/ipv4/RU.ipv4
-ipset restore --file /usr/local/share/geoipsets/maxmind/ipset/ipv6/RU.ipv6
+ipset restore --file /var/local/geoipsets/maxmind/ipset/ipv4/RU.ipv4
+ipset restore --file /var/local/geoipsets/maxmind/ipset/ipv6/RU.ipv6
 ipset save --file /etc/ipset.conf
 ```
 * Reference the ipsets from *iptables/ip6tables* rules and then save
@@ -52,14 +52,13 @@ ip6tables-save > /etc/iptables/ip6tables.rules
 ```
 **nftables** example: blacklist all Russian ipv4 and ipv6 IPs and all Chinese ipv6 IPs
 
-* Include the required set files in your main *nftables* configuration file and reference the set elements variable from a rule.
+* Include the set files in your main *nftables* configuration file and reference the set elements variable from a rule.
 ```
 #!/usr/bin/nft -f
 flush ruleset
 
-include "/usr/local/share/geoipsets/maxmind/nftset/ipv4/RU.ipv4"
-include "/usr/local/share/geoipsets/maxmind/nftset/ipv6/CN.ipv6"
-include "/usr/local/share/geoipsets/maxmind/nftset/ipv6/RU.ipv6"
+include "/var/local/geoipsets/maxmind/nftset/ipv4/*.ipv4"
+include "/var/local/geoipsets/maxmind/nftset/ipv6/*.ipv6"
 
 table netdev filter {
 
@@ -93,9 +92,9 @@ Continuing with the example above:
 * flush, re-import the new ipsets, then save
 ```
 ipset flush RU.ipv4
-ipset restore --exist --file /usr/local/share/geoipsets/maxmind/ipset/ipv4/RU.ipv4
+ipset restore --exist --file /var/local/geoipsets/maxmind/ipset/ipv4/RU.ipv4
 ipset flush RU.ipv6
-ipset restore --exist --file /usr/local/share/geoipsets/maxmind/ipset/ipv6/RU.ipv6
+ipset restore --exist --file /var/local/geoipsets/maxmind/ipset/ipv6/RU.ipv6
 ipset save --file /etc/ipset.conf
 ```
 ***nftables***
@@ -106,9 +105,8 @@ nft --file /etc/nftables.conf
 * or, take advantage of *nftables'* dynamic rulset updates by flushing and reloading only the sets themsevles using an *nft* script:
 ```
 #!/usr/bin/nft -f
-include "/usr/local/share/geoipsets/maxmind/nftset/ipv4/RU.ipv4"
-include "/usr/local/share/geoipsets/maxmind/nftset/ipv6/CN.ipv6"
-include "/usr/local/share/geoipsets/maxmind/nftset/ipv6/RU.ipv6"
+include "/var/local/geoipsets/maxmind/nftset/ipv4/*.ipv4"
+include "/var/local/geoipsets/maxmind/nftset/ipv6/*.ipv6"
 
 flush set netdev filter country-ipv4-blacklist
 add element netdev filter country-ipv4-blacklist $RU.ipv4
@@ -129,9 +127,9 @@ Option #2 is quite simple and would look like this:
 # /etc/systemd/system/update-geoipsets.service.d/override.conf
 [Service]
 ExecStart=/usr/bin/ipset flush RU.ipv4
-ExecStart=/usr/bin/ipset restore --exist --file /usr/local/share/geoipsets/maxmind/ipset/ipv4/RU.ipv4
+ExecStart=/usr/bin/ipset restore --exist --file /var/local/geoipsets/maxmind/ipset/ipv4/RU.ipv4
 ExecStart=/usr/bin/ipset flush RU.ipv6
-ExecStart=/usr/bin/ipset restore --exist --file /usr/local/share/geoipsets/maxmind/ipset/ipv6/RU.ipv6
+ExecStart=/usr/bin/ipset restore --exist --file /var/local/geoipsets/maxmind/ipset/ipv6/RU.ipv6
 ExecStart=/usr/bin/ipset save --file /etc/ipset.conf
 ```
 ***nftables***

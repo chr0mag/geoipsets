@@ -17,17 +17,16 @@ from . import utils
 class MaxMindProvider(utils.AbstractProvider):
     """MaxMind IP range set provider."""
 
-    def __init__(self, firewall: set, address_family: set, countries: set, provider_options: dict):
+    def __init__(self, firewall: set, address_family: set, countries: set, output_dir: str, provider_options: dict):
         """'provider_options' is a ConfigParser Section that can be treated as a dictionary.
             Use this mechanism to introduce provider-specific options into the configuration file."""
-        super().__init__(firewall, address_family, countries)
+        super().__init__(firewall, address_family, countries, output_dir)
 
         if not (license_key := provider_options.get('license-key')):
             print("License key cannot be empty")
             raise RuntimeError("License key cannot be empty")
 
         self.license_key = license_key
-        self.base_dir = 'geoipsets/maxmind'
 
     def generate(self):
         zip_file = self.download()  # comment out for testing
@@ -115,8 +114,8 @@ class MaxMindProvider(utils.AbstractProvider):
         network,geoname_id,registered_country_geoname_id,represented_country_geoname_id,is_anonymous_proxy,is_satellite_provider
         """
         suffix = '.' + addr_fam.value
-        ipset_dir = self.base_dir + '/ipset/' + addr_fam.value + '/'
-        nftset_dir = self.base_dir + '/nftset/' + addr_fam.value + '/'
+        ipset_dir = self.base_dir / 'maxmind/ipset' / addr_fam.value
+        nftset_dir = self.base_dir / 'maxmind/nftset' / addr_fam.value
         if addr_fam == utils.AddressFamily.IPV4:
             ip_blocks = 'GeoLite2-Country-Blocks-IPv4.csv'
             inet_family = 'family inet'
@@ -125,16 +124,16 @@ class MaxMindProvider(utils.AbstractProvider):
             inet_family = 'family inet6'
 
         # remove old sets if they exist
-        if os.path.isdir(ipset_dir):
+        if ipset_dir.is_dir():
             shutil.rmtree(ipset_dir)
 
-        if os.path.isdir(nftset_dir):
+        if nftset_dir.is_dir():
             shutil.rmtree(nftset_dir)
 
         if self.ip_tables:
-            os.makedirs(ipset_dir)
+            ipset_dir.mkdir(parents=True)
         if self.nf_tables:
-            os.makedirs(nftset_dir)
+            nftset_dir.mkdir(parents=True)
 
         with ZipFile(Path(zip_ref.filename), 'r') as zip_file:
             with zip_file.open(dir_prefix + ip_blocks, 'r') as csv_file_bytes:
@@ -158,8 +157,8 @@ class MaxMindProvider(utils.AbstractProvider):
                     # iptables/ipsets
                     #
                     if self.ip_tables:
-                        ipset_file = ipset_dir + set_name
-                        if not os.path.isfile(ipset_file):
+                        ipset_file = ipset_dir / set_name
+                        if not ipset_file.is_file():
                             with open(ipset_file, 'a') as f:
                                 f.write("create " + set_name + " hash:net " + inet_family + " maxelem 131072 comment\n")
 
@@ -170,8 +169,8 @@ class MaxMindProvider(utils.AbstractProvider):
                     # nftables set
                     #
                     if self.nf_tables:
-                        nftset_file = nftset_dir + set_name
-                        if not os.path.isfile(nftset_file):
+                        nftset_file = nftset_dir / set_name
+                        if not nftset_file.is_file():
                             with open(nftset_file, 'a') as f:
                                 f.write("define " + set_name + " = {\n")
 
@@ -179,8 +178,7 @@ class MaxMindProvider(utils.AbstractProvider):
                             f.write(net + ",\n")
 
                 # this feels dirty
-                with os.scandir(nftset_dir) as files:
-                    for nf_set_file in files:
-                        if nf_set_file.is_file():  # not strictly needed
-                            with open(nf_set_file, 'a') as f:
-                                f.write("}\n")
+                for nf_set_file in nftset_dir.iterdir():
+                    if nf_set_file.is_file():  # not strictly needed
+                        with open(nf_set_file, 'a') as f:
+                            f.write("}\n")

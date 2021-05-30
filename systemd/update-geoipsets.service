@@ -2,11 +2,22 @@
 Description=Update geoipsets
 Wants=network.target network-online.target
 After=network.target network-online.target
+AssertFileIsExecutable=/usr/bin/geoipsets
+AssertPathExists=/var/local
 
 [Service]
-WorkingDirectory=/usr/local/share
-StandardError=journal
 Type=oneshot
-
-ExecStart=/usr/bin/geoipsets
-#ExecStart=/usr/local/bin/build-country-sets.sh
+CapabilityBoundingSet=~CAP_SYS_ADMIN
+NoNewPrivileges=true
+ProtectProc=invisible
+PrivateDevices=true
+ProtectClock=true
+ProtectHome=read-only
+ProtectSystem=strict
+ReadWritePaths=/var/local /tmp
+InaccessiblePaths=-/lost+found
+NoExecPaths=/
+ExecPaths=/usr/bin/python /usr/bin/geoipsets /usr/bin/nft usr/bin/ipset /usr/lib
+ExecStart=/usr/bin/geoipsets --output-dir /var/local
+StandardOutput=journal
+StandardError=journal
