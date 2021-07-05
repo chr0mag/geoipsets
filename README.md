@@ -26,7 +26,7 @@ Execute the service once manually to initially populate the set data.
 ```
 systemctl start update-geoipsets.service
 ```
-Set data is placed in */usr/local/share/* by default. You can modify the service file to change this.
+Set data is placed in */tmp* by default. Use the `--output-dir` option to change this.
 
 You may need to enable the relevant network *wait* service to avoid the script running on boot before a network connection is available. eg. if using *systemd-networkd* for network management:
 ```
