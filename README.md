@@ -1,6 +1,6 @@
 geoipsets
 ============
-![badge](https://github.com/chr0mag/geoipsets/actions/workflows/python-tests.yaml/badge.svg) ![PyPI](https://img.shields.io/pypi/v/geoipsets) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/geoipsets) ![PyPI - Downloads](https://img.shields.io/pypi/dm/geoipsets) ![GitHub](https://img.shields.io/github/license/chr0mag/geoipsets)
+![badge](https://github.com/chr0mag/geoipsets/actions/workflows/python-tests.yaml/badge.svg) ![PyPI](https://img.shields.io/pypi/v/geoipsets) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/geoipsets) [![Downloads](https://pepy.tech/badge/geoipsets)](https://pepy.tech/project/geoipsets) ![GitHub](https://img.shields.io/github/license/chr0mag/geoipsets)
 
 Utility to generate country-specific IPv4/IPv6 network ranges consumable by both *iptables/ipset* and *nftables*. Also included is a *systemd* service and timer to periodically update the IP sets.
 
