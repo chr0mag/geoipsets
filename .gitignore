@@ -1,4 +1,6 @@
 .idea
+*.iml
+**/.pytest_cache
 python/dist
 python/geoipsets.egg-info
 python/build
