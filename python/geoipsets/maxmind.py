@@ -178,7 +178,8 @@ class MaxMindProvider(utils.AbstractProvider):
                             f.write(net + ",\n")
 
                 # this feels dirty
-                for nf_set_file in nftset_dir.iterdir():
-                    if nf_set_file.is_file():  # not strictly needed
-                        with open(nf_set_file, 'a') as f:
-                            f.write("}\n")
+                if self.nf_tables:
+                    for nf_set_file in nftset_dir.iterdir():
+                        if nf_set_file.is_file():  # not strictly needed
+                            with open(nf_set_file, 'a') as f:
+                                f.write("}\n")
