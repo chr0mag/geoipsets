@@ -4,6 +4,7 @@ import hashlib
 import os
 import shutil
 import sys
+from collections import Counter
 from csv import DictReader
 from io import TextIOWrapper
 from pathlib import Path
@@ -137,7 +138,14 @@ class MaxMindProvider(utils.AbstractProvider):
 
         with ZipFile(Path(zip_ref.filename), 'r') as zip_file:
             with zip_file.open(dir_prefix + ip_blocks, 'r') as csv_file_bytes:
-                rows = DictReader(TextIOWrapper(csv_file_bytes))
+                stream = TextIOWrapper(csv_file_bytes)
+
+                # count the number of entries for each country
+                cc_counter = Counter(country_code_map.get(r['geoname_id'] or r['registered_country_geoname_id']) for r in DictReader(stream))
+
+                # return the stream to the start
+                stream.seek(0, 0)
+                rows = DictReader(stream)
                 for r in rows:
                     geo_id = r['geoname_id']
                     if not geo_id:
@@ -160,7 +168,9 @@ class MaxMindProvider(utils.AbstractProvider):
                         ipset_file = ipset_dir / set_name
                         if not ipset_file.is_file():
                             with open(ipset_file, 'a') as f:
-                                f.write("create " + set_name + " hash:net " + inet_family + " maxelem 131072 comment\n")
+                                # round up to the next next power of 2 for a load ratio < 0.5
+                                maxelem = max(131072, 1 if cc_counter[cc] == 0 else (2 << (cc_counter[cc] - 1).bit_length()))
+                                f.write("create {0} hash:net {1} maxelem {2} comment\n".format(set_name, inet_family, maxelem))
 
                         with open(ipset_file, 'a') as f:
                             f.write("add " + set_name + " " + net + " comment " + cc + "\n")
