@@ -146,6 +146,7 @@ ExecStart=/usr/bin/nft --file /usr/local/bin/refresh-sets.nft
 ```
 Where *refresh-sets.nft* contains the *nft* commands listed above.
 
+Note that the  [example systemd service file](https://github.com/chr0mag/geoipsets/blob/main/systemd/update-geoipsets.service) is heavily sandboxed and does not have privileges to restart network services by default. See the example file for instructions showing how to loosen restrictions to enable this.
 
 Performance
 -----------
