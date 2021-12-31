@@ -168,8 +168,8 @@ class MaxMindProvider(utils.AbstractProvider):
                         ipset_file = ipset_dir / set_name
                         if not ipset_file.is_file():
                             with open(ipset_file, 'a') as f:
-                                # round up to the next next power of 2 for a load ratio < 0.5
-                                maxelem = max(131072, 1 if cc_counter[cc] == 0 else (2 << (cc_counter[cc] - 1).bit_length()))
+                                # round up to the next power of 2
+                                maxelem = max(131072, 1 if cc_counter[cc] == 0 else (1 << (cc_counter[cc] - 1).bit_length()))
                                 f.write("create {0} hash:net {1} maxelem {2} comment\n".format(set_name, inet_family, maxelem))
 
                         with open(ipset_file, 'a') as f:

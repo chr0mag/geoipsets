@@ -96,7 +96,7 @@ class DbIpProvider(utils.AbstractProvider):
             if self.ip_tables:
                 ipset_path = self.base_dir / 'dbip/ipset' / ip_version / set_name
                 ipset_file = open(ipset_path, 'w')
-                maxelem = max(131072, 1 if len(subnets) == 0 else (2 << (len(subnets) - 1).bit_length()))
+                maxelem = max(131072, 1 if len(subnets) == 0 else (1 << (len(subnets) - 1).bit_length()))
                 ipset_file.write("create {0} hash:net {1} maxelem {2} comment\n".format(set_name, inet_family, maxelem))
 
             if self.nf_tables:
