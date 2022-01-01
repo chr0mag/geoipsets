@@ -141,7 +141,8 @@ class MaxMindProvider(utils.AbstractProvider):
                 stream = TextIOWrapper(csv_file_bytes)
 
                 # count the number of entries for each country
-                cc_counter = Counter(country_code_map.get(r['geoname_id'] or r['registered_country_geoname_id']) for r in DictReader(stream))
+                cc_counter = Counter(country_code_map.get(r['geoname_id'] or r['registered_country_geoname_id'])
+                                     for r in DictReader(stream))
 
                 # return the stream to the start
                 stream.seek(0, 0)
@@ -169,8 +170,11 @@ class MaxMindProvider(utils.AbstractProvider):
                         if not ipset_file.is_file():
                             with open(ipset_file, 'a') as f:
                                 # round up to the next power of 2
-                                maxelem = max(131072, 1 if cc_counter[cc] == 0 else (1 << (cc_counter[cc] - 1).bit_length()))
-                                f.write("create {0} hash:net {1} maxelem {2} comment\n".format(set_name, inet_family, maxelem))
+                                maxelem = max(131072,
+                                              1 if cc_counter[cc] == 0 else (1 << (cc_counter[cc] - 1).bit_length()))
+                                f.write("create {0} hash:net {1} maxelem {2} comment\n".format(set_name,
+                                                                                               inet_family,
+                                                                                               maxelem))
 
                         with open(ipset_file, 'a') as f:
                             f.write("add " + set_name + " " + net + " comment " + cc + "\n")
