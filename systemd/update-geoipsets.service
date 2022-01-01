@@ -7,17 +7,29 @@ AssertPathExists=/var/local
 
 [Service]
 Type=oneshot
-CapabilityBoundingSet=~CAP_SYS_ADMIN
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_INET AF_INET6
+#if firewall configuration is updated as part of this service, replace the 2 lines above with the 2 lines below
+#CapabilityBoundingSet=CAP_NET_ADMIN
+#RestrictAddressFamilies=AF_INET AF_INET6 AF_NETLINK
+RestrictNamespaces=true
 NoNewPrivileges=true
-ProtectProc=invisible
 PrivateDevices=true
 ProtectClock=true
-ProtectHome=read-only
-ProtectSystem=strict
-ReadWritePaths=/var/local /tmp
-InaccessiblePaths=-/lost+found
-NoExecPaths=/
-ExecPaths=/usr/bin/python /usr/bin/geoipsets /usr/bin/nft /usr/bin/ipset /usr/lib
+ProtectControlGroups=true
+ProtectHome=true
+ProtectKernelLogs=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectProc=invisible
+ProtectSystem=full
+MemoryDenyWriteExecute=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+ProtectHostname=true
+LockPersonality=true
 ExecStart=/usr/bin/geoipsets --output-dir /var/local
 StandardOutput=journal
 StandardError=journal
