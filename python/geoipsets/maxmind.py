@@ -3,14 +3,14 @@
 import hashlib
 import os
 import shutil
-import sys
 from collections import Counter
 from csv import DictReader
 from io import TextIOWrapper
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from urllib import request
 from zipfile import ZipFile
+
+import requests
 
 from . import utils
 
@@ -18,22 +18,28 @@ from . import utils
 class MaxMindProvider(utils.AbstractProvider):
     """MaxMind IP range set provider."""
 
-    def __init__(self, firewall: set, address_family: set, countries: set, output_dir: str, provider_options: dict):
+    def __init__(self, firewall: set, address_family: set, checksum: bool, countries: set, output_dir: str,
+                 provider_options: dict):
         """'provider_options' is a ConfigParser Section that can be treated as a dictionary.
             Use this mechanism to introduce provider-specific options into the configuration file."""
-        super().__init__(firewall, address_family, countries, output_dir)
+        super().__init__(firewall, address_family, checksum, countries, output_dir)
 
         if not (license_key := provider_options.get('license-key')):
             print("License key cannot be empty")
             raise RuntimeError("License key cannot be empty")
 
         self.license_key = license_key
+        self.base_url = 'https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-Country-CSV&license_key='
 
     def generate(self):
         zip_file = self.download()  # comment out for testing
 
+        if self.checksum:
+            self.check_checksum(zip_file)
+
         with ZipFile(Path(zip_file.name), 'r') as zip_ref:
-            # with ZipFile(Path("/tmp/tmpxwunp8fw.zip"), 'r') as zip_ref:  # replace line above with this for testing
+            # with ZipFile(Path("/tmp/tmp96kyeecw.zip"), 'r') as zip_ref:  # replace line above with this for testing
+
             zip_dir_prefix = os.path.commonprefix(zip_ref.namelist())
             cc_map = self.build_map(zip_ref, zip_dir_prefix)
 
@@ -43,47 +49,6 @@ class MaxMindProvider(utils.AbstractProvider):
 
             if self.ipv6:
                 self.build_sets(cc_map, zip_ref, zip_dir_prefix, utils.AddressFamily.IPV6)
-
-    def download(self):
-        """
-        Base URL: https://download.maxmind.com/app/geoip_download
-        CSV query string: ?edition_id=GeoLite2-Country-CSV&license_key=LICENSE_KEY&suffix=zip
-        MD5 query string: ?edition_id=GeoLite2-Country-CSV&license_key=LICENSE_KEY&suffix=zip.md5
-
-        The downloaded filename is available in the 'Content-Disposition' HTTP response header.
-        eg. Content-Disposition: attachment; filename=GeoLite2-Country-CSV_20200922.zip
-        """
-        base_url = 'https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-Country-CSV&license_key='
-        zip_url = base_url + self.license_key + '&suffix=zip'
-        md5_url = base_url + self.license_key + '&suffix=zip.md5'
-
-        # download latest ZIP file
-        # TODO catch URLError and HTTPError? eg. https://docs.python.org/3/howto/urllib2.html
-        with request.urlopen(zip_url) as http_response:
-            with NamedTemporaryFile(suffix=".zip", delete=False) as zip_file:
-                shutil.copyfileobj(http_response, zip_file)
-                zip_file.seek(0)
-                # calculate md5 hash
-                md5_hash = hashlib.md5()
-                # Read and update hash in 4K chunks
-                while chunk := zip_file.read(4096):
-                    md5_hash.update(chunk)
-
-        # download md5 sum
-        with request.urlopen(md5_url) as md5_response:
-            with NamedTemporaryFile(suffix=".md5", delete=False) as md5_file:
-                shutil.copyfileobj(md5_response, md5_file)
-                md5_file.seek(0)
-                expected_md5sum = md5_file.read().decode('utf-8')
-
-        computed_md5sum = md5_hash.hexdigest()
-
-        # compare downloaded md5 hash with computed version
-        if expected_md5sum != computed_md5sum:
-            print("Computed zip file hash:", computed_md5sum, "does not match expected value:", expected_md5sum)
-            sys.exit()
-
-        return zip_file
 
     def build_map(self, zip_ref: ZipFile, dir_prefix: str):
         """
@@ -95,7 +60,6 @@ class MaxMindProvider(utils.AbstractProvider):
         geoname_id, locale_code, continent_code, continent_name, country_iso_code, country_name, is_in_european_union
         """
         locations = 'GeoLite2-Country-Locations-en.csv'
-        # print(zip_ref.filename)
         country_code_map = dict()
         with ZipFile(Path(zip_ref.filename), 'r') as zip_file:
             with zip_file.open(dir_prefix + locations, 'r') as csv_file_bytes:
@@ -197,3 +161,52 @@ class MaxMindProvider(utils.AbstractProvider):
                         if nf_set_file.is_file():  # not strictly needed
                             with open(nf_set_file, 'a') as f:
                                 f.write("}\n")
+
+    def download(self):
+        # URL: https://download.maxmind.com/app/geoip_download
+        # CSV query string: ?edition_id=GeoLite2-Country-CSV&license_key=LICENSE_KEY&suffix=zip
+
+        # The downloaded filename is available in the 'Content-Disposition' HTTP response header.
+        # eg. Content-Disposition: attachment; filename=GeoLite2-Country-CSV_20200922.zip
+        file_suffix = 'zip'
+        zip_url = self.base_url + self.license_key + '&suffix=' + file_suffix
+
+        # download latest ZIP file
+        zip_http_response = requests.get(zip_url)
+        with NamedTemporaryFile(suffix='.' + file_suffix, delete=False) as zip_file:
+            zip_file.write(zip_http_response.content)
+
+        return zip_file
+
+    def download_checksum(self):
+        # URL: https://download.maxmind.com/app/geoip_download
+        # MD5 query string: ?edition_id=GeoLite2-Country-CSV&license_key=LICENSE_KEY&suffix=zip.md5
+        file_suffix = 'zip.md5'
+        md5_url = self.base_url + self.license_key + '&suffix=' + file_suffix
+        md5_http_response = requests.get(md5_url)
+        with NamedTemporaryFile(suffix='.' + file_suffix, delete=False) as md5_file:
+            # shutil.copyfileobj(md5_response, md5_file)
+
+            md5_file.write(md5_http_response.content)
+            md5_file.seek(0)
+
+            return md5_file.read().decode('utf-8')
+
+    def check_checksum(self, zip_ref):
+        expected_md5sum = self.download_checksum()
+        # calculate md5 hash
+        with open(zip_ref.name, 'rb') as raw_zip_file:
+            md5_hash = hashlib.md5()
+            # print("CHECK_CHECKSUM - Zip file position before: ", zip_ref.tell())
+            md5_hash.update(raw_zip_file.read())
+            # print("CHECK_CHECKSUM - Zip file position after: ", zip_ref.tell())
+            computed_md5sum = md5_hash.hexdigest()
+
+        # reset Zip file to beginning of file
+        # zip_ref.seek(0)
+
+        # compare downloaded md5 hash with computed version
+        if expected_md5sum != computed_md5sum:
+            raise RuntimeError("Computed zip file digest '{0}' does not match expected value '{1}'".format(
+                computed_md5sum, expected_md5sum
+            ))

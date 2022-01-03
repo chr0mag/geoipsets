@@ -1,9 +1,10 @@
 # config_test.py
 
 import subprocess
-import pytest
-from pathlib import Path
 from configparser import ConfigParser
+from pathlib import Path
+
+import pytest
 
 from geoipsets import __main__
 from geoipsets import utils
@@ -43,7 +44,7 @@ def test_valid_option_no_value(option):
 
 
 @pytest.mark.parametrize("option", ['--provider', '--firewall', '--address-family'])
-def test_provider_valid_option_invalid_value(option):
+def test_valid_option_invalid_value(option):
     """
     Does the script exit if an invalid value is passed to a valid option
     """
@@ -115,6 +116,7 @@ def test_cli_repeated_option_duplicate_value(option, value):
                          [('provider', {'dbip'}),
                           ('firewall', {utils.Firewall.NF_TABLES.value}),
                           ('address-family', {utils.AddressFamily.IPV4.value}),
+                          ('checksum', True),
                           ('countries', 'all'),
                           ('output-dir', '/tmp')])
 def test_no_cli_opts_no_config_file(option, expected):
@@ -129,6 +131,7 @@ def test_no_cli_opts_no_config_file(option, expected):
                          [('provider', 'maxmind', {'maxmind'}),
                           ('firewall', utils.Firewall.IP_TABLES.value, {utils.Firewall.IP_TABLES.value}),
                           ('address-family', utils.AddressFamily.IPV6.value, {utils.AddressFamily.IPV6.value}),
+                          ('no-checksum', 'unused', False),
                           ('countries', 'RU,CN', {'ru', 'cn'}),
                           ('output-dir', '/var/local', '/var/local')])
 def test_single_cli_opts_no_config_file(option, value, expected):
@@ -136,8 +139,12 @@ def test_single_cli_opts_no_config_file(option, value, expected):
     Do single value CLI options correctly override defaults?
     Note: specifying 'maxmind' without license key will generate a RuntimeError during real execution
     """
-    config = __main__.get_config(['--' + option, value])
-    assert config.get(option) == expected
+    if option == 'no-checksum':
+        config = __main__.get_config(['--' + option])
+        assert not config.get('checksum')
+    else:
+        config = __main__.get_config(['--' + option, value])
+        assert config.get(option) == expected
 
 
 @pytest.mark.parametrize("country_list, expected",
@@ -189,6 +196,7 @@ def test_config_file_non_defaults(option, value, monkeypatch):
             """
             [general]
             {0}={1}
+            checksum=False
             [countries]
             CA
             """.format(option, value))
@@ -198,6 +206,7 @@ def test_config_file_non_defaults(option, value, monkeypatch):
 
     config = __main__.get_config(['-c', '/tmp/dummy.conf'])
     assert config.get(option) == {value}
+    assert not config.get('checksum')
     assert config.get('countries') == {'ca'}
 
 
@@ -205,6 +214,7 @@ def test_config_file_non_defaults(option, value, monkeypatch):
                          [('provider', 'maxmind'),
                           ('firewall', utils.Firewall.IP_TABLES.value),
                           ('address-family', utils.AddressFamily.IPV6.value),
+                          ('no-checksum', 'unused'),
                           ('countries', 'ru')])
 def test_config_file_cli_args_precedence(option, value, monkeypatch):
     """
@@ -219,6 +229,7 @@ def test_config_file_cli_args_precedence(option, value, monkeypatch):
             provider=dbip
             firewall=nftables
             address-family=ipv4
+            checksum=True
             [countries]
             CA
             """)
@@ -226,8 +237,12 @@ def test_config_file_cli_args_precedence(option, value, monkeypatch):
 
     monkeypatch.setattr(__main__, "get_config_parser", mockreturn, raising=True)
 
-    config = __main__.get_config(['--' + option, value, '-c', '/tmp/dummy.conf'])
-    assert config.get(option) == {value}
+    if option == 'no-checksum':
+        config = __main__.get_config(['--' + option, '-c', '/tmp/dummy.conf'])
+        assert not config.get('checksum')
+    else:
+        config = __main__.get_config(['--' + option, value, '-c', '/tmp/dummy.conf'])
+        assert config.get(option) == {value}
 
 
 @pytest.mark.parametrize("provider",

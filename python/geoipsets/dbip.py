@@ -3,12 +3,13 @@
 import gzip
 import hashlib
 import shutil
-import requests
 from csv import DictReader
 from datetime import datetime
 from io import TextIOWrapper
-from tempfile import NamedTemporaryFile
 from ipaddress import ip_address, summarize_address_range
+from tempfile import NamedTemporaryFile
+
+import requests
 from bs4 import BeautifulSoup
 
 from . import utils
@@ -17,14 +18,14 @@ from . import utils
 class DbIpProvider(utils.AbstractProvider):
     """ DBIP IP range set provider. """
 
-    def __init__(self, firewall: set, address_family: set, countries: set, output_dir: str):
-        super().__init__(firewall, address_family, countries, output_dir)
+    def __init__(self, firewall: set, address_family: set, checksum: bool, countries: set, output_dir: str):
+        super().__init__(firewall, address_family, checksum, countries, output_dir)
 
-        # ipset_dir = Path(self.base_dir + '/dbip/ipset/' + utils.AddressFamily.IPV4.value + '/')
         ipset_dir = self.base_dir / 'dbip/ipset' / utils.AddressFamily.IPV4.value
         nftset_dir = self.base_dir / 'dbip/nftset' / utils.AddressFamily.IPV4.value
         ip6set_dir = self.base_dir / 'dbip/ipset' / utils.AddressFamily.IPV6.value
         nft6set_dir = self.base_dir / 'dbip/nftset' / utils.AddressFamily.IPV6.value
+        self.webpage = 'https://db-ip.com/db/download/ip-to-country-lite'
 
         # remove/re-create old IPv4 sets if they exist
         if ipset_dir.is_dir():
@@ -57,16 +58,17 @@ class DbIpProvider(utils.AbstractProvider):
 
         ip_start, ip_end, country
         """
-        gzip_ref = self.download()
+        gzip_ref = self.download()  # comment out for testing
         # dictionary of subnet lists, indexed by filename
         # filename is CC.address_family -- eg. CA.ipv4
         country_subnets = dict()
 
         with gzip.GzipFile(gzip_ref, 'rb') as csv_file_bytes:
-            # with gzip.GzipFile('/tmp/tmp1ih8mxyw.csv.gz', 'rb') as csv_file_bytes:
+            # with gzip.GzipFile('/tmp/tmphq4qgkfp.csv.gz', 'rb') as csv_file_bytes:
 
             # validate checksum of the CSV file (not the GZIP file)
-            self.check_checksum(csv_file_bytes)
+            if self.checksum:
+                self.check_checksum(csv_file_bytes)
 
             rows = DictReader(TextIOWrapper(csv_file_bytes), fieldnames=("ip_start", "ip_end", "country"))
             for r in rows:
@@ -141,8 +143,7 @@ class DbIpProvider(utils.AbstractProvider):
 
     def download_checksum(self):
         # download sha1sum
-        webpage = 'https://db-ip.com/db/download/ip-to-country-lite'
-        webpage_http_response = requests.get(webpage)
+        webpage_http_response = requests.get(self.webpage)
 
         # the page section we're looking for looks like this:
         # <dl class="card-body">
@@ -184,4 +185,5 @@ class DbIpProvider(utils.AbstractProvider):
         # compare downloaded sha1 hash with computed version
         if expected_sha1sum != computed_sha1sum:
             raise RuntimeError("Computed CSV file digest '{0}' does not match expected value '{1}'".format(
-                computed_sha1sum, expected_sha1sum))
+                computed_sha1sum, expected_sha1sum
+            ))
