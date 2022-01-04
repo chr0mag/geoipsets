@@ -196,7 +196,6 @@ def test_config_file_non_defaults(option, value, monkeypatch):
             """
             [general]
             {0}={1}
-            checksum=False
             [countries]
             CA
             """.format(option, value))
@@ -206,7 +205,6 @@ def test_config_file_non_defaults(option, value, monkeypatch):
 
     config = __main__.get_config(['-c', '/tmp/dummy.conf'])
     assert config.get(option) == {value}
-    assert not config.get('checksum')
     assert config.get('countries') == {'ca'}
 
 

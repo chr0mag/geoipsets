@@ -1,7 +1,7 @@
 # __main__.py
 
 import configparser
-from argparse import ArgumentParser, BooleanOptionalAction
+from argparse import ArgumentParser
 from configparser import ConfigParser
 from pathlib import Path
 from sys import argv
@@ -76,9 +76,15 @@ def get_config(cli_args=None):
                         type=str,
                         default=default_config_path,
                         help="path to configuration file (default: {0})".format(default_config_path))
-    parser.add_argument("-k", "--checksum",
-                        action=BooleanOptionalAction,
-                        help="enable/disable checksum validation of downloaded files (default: True)")
+    parser.add_argument("--checksum",
+                        dest="checksum",
+                        action="store_true",
+                        help="enable checksum validation of downloaded files (default)")
+    parser.add_argument("--no-checksum",
+                        dest="checksum",
+                        action="store_false",
+                        help="disable checksum validation of downloaded files")
+    parser.set_defaults(checksum=True)
 
     # set defaults
     default_options = dict()
@@ -86,7 +92,7 @@ def get_config(cli_args=None):
     default_options['firewall'] = {utils.Firewall.NF_TABLES.value}
     default_options['address-family'] = {utils.AddressFamily.IPV4.value}
     default_options['countries'] = 'all'
-    default_options['checksum'] = True
+    default_options['checksum'] = parser.parse_args(cli_args).checksum
     options = default_options
 
     # step 1: load a valid configuration file, if one exists
@@ -123,16 +129,7 @@ def get_config(cli_args=None):
             if (address_family := general.get('address-family')) is not None:
                 options['address-family'] = set(address_family.split(','))
 
-    # step 5: checksum
-    if (checksum := parser.parse_args(cli_args).checksum) is not None:
-        options['checksum'] = checksum
-    else:
-        if valid_conf_file and config_file.has_section('general'):
-            general = config_file['general']
-            if (checksum := general.getboolean('checksum')) is not None:
-                options['checksum'] = checksum
-
-    # step 6: countries
+    # step 5: countries
     if (country_arg := parser.parse_args(cli_args).countries) is not None:
         country_set = set()
         try:
@@ -159,14 +156,14 @@ def get_config(cli_args=None):
             if len(countries) > 0:
                 options['countries'] = countries
 
-    # step 7: provider options
+    # step 6: provider options
     if valid_conf_file:
         for p in options.get('provider'):
             if config_file.has_section(p):
                 provider_options = config_file[p]
                 options[p] = provider_options
 
-    # step 8: output path
+    # step 7: output path
     options['output-dir'] = parser.parse_args(cli_args).output_dir
     return options
 
