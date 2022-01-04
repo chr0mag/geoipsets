@@ -176,7 +176,10 @@ class DbIpProvider(utils.AbstractProvider):
 
         # calculate the sha1sum of the downloaded file
         sha1_hash = hashlib.sha1()
-        sha1_hash.update(csv_file_bytes.read())
+        # Read and update hash in 8K chunks
+        while chunk := csv_file_bytes.read(8192):
+            sha1_hash.update(chunk)
+
         computed_sha1sum = sha1_hash.hexdigest()
 
         # reset position to beginning of file now that we're done

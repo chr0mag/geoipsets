@@ -25,7 +25,6 @@ class MaxMindProvider(utils.AbstractProvider):
         super().__init__(firewall, address_family, checksum, countries, output_dir)
 
         if not (license_key := provider_options.get('license-key')):
-            print("License key cannot be empty")
             raise RuntimeError("License key cannot be empty")
 
         self.license_key = license_key
@@ -185,8 +184,6 @@ class MaxMindProvider(utils.AbstractProvider):
         md5_url = self.base_url + self.license_key + '&suffix=' + file_suffix
         md5_http_response = requests.get(md5_url)
         with NamedTemporaryFile(suffix='.' + file_suffix, delete=False) as md5_file:
-            # shutil.copyfileobj(md5_response, md5_file)
-
             md5_file.write(md5_http_response.content)
             md5_file.seek(0)
 
@@ -194,16 +191,15 @@ class MaxMindProvider(utils.AbstractProvider):
 
     def check_checksum(self, zip_ref):
         expected_md5sum = self.download_checksum()
+
         # calculate md5 hash
         with open(zip_ref.name, 'rb') as raw_zip_file:
             md5_hash = hashlib.md5()
-            # print("CHECK_CHECKSUM - Zip file position before: ", zip_ref.tell())
-            md5_hash.update(raw_zip_file.read())
-            # print("CHECK_CHECKSUM - Zip file position after: ", zip_ref.tell())
-            computed_md5sum = md5_hash.hexdigest()
+            # Read and update hash in 8K chunks
+            while chunk := raw_zip_file.read(8192):
+                md5_hash.update(chunk)
 
-        # reset Zip file to beginning of file
-        # zip_ref.seek(0)
+            computed_md5sum = md5_hash.hexdigest()
 
         # compare downloaded md5 hash with computed version
         if expected_md5sum != computed_md5sum:
