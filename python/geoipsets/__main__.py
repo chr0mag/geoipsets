@@ -1,4 +1,5 @@
 # __main__.py
+
 import configparser
 from argparse import ArgumentParser
 from configparser import ConfigParser
@@ -75,6 +76,15 @@ def get_config(cli_args=None):
                         type=str,
                         default=default_config_path,
                         help="path to configuration file (default: {0})".format(default_config_path))
+    parser.add_argument("--checksum",
+                        dest="checksum",
+                        action="store_true",
+                        help="enable checksum validation of downloaded files (default)")
+    parser.add_argument("--no-checksum",
+                        dest="checksum",
+                        action="store_false",
+                        help="disable checksum validation of downloaded files")
+    parser.set_defaults(checksum=True)
 
     # set defaults
     default_options = dict()
@@ -82,6 +92,7 @@ def get_config(cli_args=None):
     default_options['firewall'] = {utils.Firewall.NF_TABLES.value}
     default_options['address-family'] = {utils.AddressFamily.IPV4.value}
     default_options['countries'] = 'all'
+    default_options['checksum'] = parser.parse_args(cli_args).checksum
     options = default_options
 
     # step 1: load a valid configuration file, if one exists
@@ -161,9 +172,11 @@ def main():
     opts = get_config()
     providers = opts.get('provider')
     print("Building geoipsets...")
+
     if "maxmind" in providers:
         mmp = maxmind.MaxMindProvider(opts.get('firewall'),
                                       opts.get('address-family'),
+                                      opts.get('checksum'),
                                       opts.get('countries'),
                                       opts.get('output-dir'),
                                       opts.get('maxmind'))
@@ -172,6 +185,7 @@ def main():
     if "dbip" in providers:
         dbipp = dbip.DbIpProvider(opts.get('firewall'),
                                   opts.get('address-family'),
+                                  opts.get('checksum'),
                                   opts.get('countries'),
                                   opts.get('output-dir'))
         dbipp.generate()

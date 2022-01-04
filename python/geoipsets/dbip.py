@@ -1,14 +1,16 @@
 # dbip.py
 
 import gzip
+import hashlib
 import shutil
 from csv import DictReader
 from datetime import datetime
 from io import TextIOWrapper
-from tempfile import NamedTemporaryFile
 from ipaddress import ip_address, summarize_address_range
+from tempfile import NamedTemporaryFile
 
 import requests
+from bs4 import BeautifulSoup
 
 from . import utils
 
@@ -16,14 +18,14 @@ from . import utils
 class DbIpProvider(utils.AbstractProvider):
     """ DBIP IP range set provider. """
 
-    def __init__(self, firewall: set, address_family: set, countries: set, output_dir: str):
-        super().__init__(firewall, address_family, countries, output_dir)
+    def __init__(self, firewall: set, address_family: set, checksum: bool, countries: set, output_dir: str):
+        super().__init__(firewall, address_family, checksum, countries, output_dir)
 
-        # ipset_dir = Path(self.base_dir + '/dbip/ipset/' + utils.AddressFamily.IPV4.value + '/')
         ipset_dir = self.base_dir / 'dbip/ipset' / utils.AddressFamily.IPV4.value
         nftset_dir = self.base_dir / 'dbip/nftset' / utils.AddressFamily.IPV4.value
         ip6set_dir = self.base_dir / 'dbip/ipset' / utils.AddressFamily.IPV6.value
         nft6set_dir = self.base_dir / 'dbip/nftset' / utils.AddressFamily.IPV6.value
+        self.webpage = 'https://db-ip.com/db/download/ip-to-country-lite'
 
         # remove/re-create old IPv4 sets if they exist
         if ipset_dir.is_dir():
@@ -56,13 +58,18 @@ class DbIpProvider(utils.AbstractProvider):
 
         ip_start, ip_end, country
         """
-        gzip_ref = self.download()
+        gzip_ref = self.download()  # comment out for testing
         # dictionary of subnet lists, indexed by filename
         # filename is CC.address_family -- eg. CA.ipv4
         country_subnets = dict()
 
         with gzip.GzipFile(gzip_ref, 'rb') as csv_file_bytes:
-            # with gzip.GzipFile('/tmp/tmpuw3uwn8i.csv.gz', 'rb') as csv_file_bytes:
+            # with gzip.GzipFile('/tmp/tmphq4qgkfp.csv.gz', 'rb') as csv_file_bytes:
+
+            # validate checksum of the CSV file (not the GZIP file)
+            if self.checksum:
+                self.check_checksum(csv_file_bytes)
+
             rows = DictReader(TextIOWrapper(csv_file_bytes), fieldnames=("ip_start", "ip_end", "country"))
             for r in rows:
                 cc = r['country']
@@ -124,14 +131,62 @@ class DbIpProvider(utils.AbstractProvider):
         eg. https://download.db-ip.com/free/dbip-country-lite-2020-10.csv.gz
         filename: dbip-country-lite-YYYY-MM.csv.gz
         """
-        file_extension = '.csv.gz'
-        now = datetime.now()
-        url = 'https://download.db-ip.com/free/dbip-country-lite-' + now.strftime('%Y-%m') + file_extension
+        file_suffix = '.csv.gz'
+        url = 'https://download.db-ip.com/free/dbip-country-lite-' + datetime.utcnow().strftime('%Y-%m') + file_suffix
 
         # download latest GZIP file
         http_response = requests.get(url)
-        with NamedTemporaryFile(suffix=file_extension, delete=False) as gzip_file:
+        with NamedTemporaryFile(suffix=file_suffix, delete=False) as gzip_file:
             gzip_file.write(http_response.content)
 
-        # TODO: download and validate checksum
         return gzip_file.name
+
+    def download_checksum(self):
+        # download sha1sum
+        webpage_http_response = requests.get(self.webpage)
+
+        # the page section we're looking for looks like this:
+        # <dl class="card-body">
+        #     <dt>Format</dt>
+        #     <dd>CSV</dd>
+        #     <dt>Release</dt>
+        #     <dd>January 2022</dd>
+        #     <dt>Supported language(s)</dt>
+        #     <dd>English</dd>
+        #     <dt>Number of records</dt>
+        #     <dd>583,730</dd>
+        #     <dt>File size</dt>
+        #     <dd>24.7 MB</dd>
+        #     <dt>MD5SUM</dt>
+        #     <dd class="small">6f58a437323f6bc891a9c8fdef96add3</dd>
+        #     <dt>SHA1SUM</dt>
+        #     <dd class="small">d663790f368afa00e0ac28f2075299e1e30a5054</dd>
+        # </dl>
+
+        soup = BeautifulSoup(webpage_http_response.content, "html.parser")
+
+        # we are using the CSV format, not MMDB
+        csv_card_body = soup.find('dd', string="CSV")
+        csv_sha1sum_tag = csv_card_body.find_next_siblings('dt', string="SHA1SUM")
+
+        return csv_sha1sum_tag[0].find_next_sibling().string
+
+    def check_checksum(self, csv_file_bytes):
+        expected_sha1sum = self.download_checksum()
+
+        # calculate the sha1sum of the downloaded file
+        sha1_hash = hashlib.sha1()
+        # Read and update hash in 8K chunks
+        while chunk := csv_file_bytes.read(8192):
+            sha1_hash.update(chunk)
+
+        computed_sha1sum = sha1_hash.hexdigest()
+
+        # reset position to beginning of file now that we're done
+        csv_file_bytes.seek(0)
+
+        # compare downloaded sha1 hash with computed version
+        if expected_sha1sum != computed_sha1sum:
+            raise RuntimeError("Computed CSV file digest '{0}' does not match expected value '{1}'".format(
+                computed_sha1sum, expected_sha1sum
+            ))

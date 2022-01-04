@@ -32,7 +32,7 @@ setup(
     ],
     packages=find_packages(exclude=("tests",)),
     include_package_data=True,
-    install_requires=["requests"],
+    install_requires=["requests", "beautifulsoup4"],
     entry_points={
         "console_scripts": [
             "geoipsets=geoipsets.__main__:main",
