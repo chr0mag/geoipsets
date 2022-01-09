@@ -150,8 +150,8 @@ Note that the  [example systemd service file](https://github.com/chr0mag/geoipse
 
 Performance
 -----------
-* The Python version is much faster than the Bash version so use this if you have te choice.
-* Versions > v2.3.1 include a significant performance improvement when generating MaxMind data. (See issue #16 and PR #24.) 
+* The Python version is much faster than the Bash version so use this if you have the choice.
+* Versions > v2.3.1 include a significant performance improvement when generating MaxMind data. (See [issue #16](https://github.com/chr0mag/geoipsets/issues/16) and [PR #24](https://github.com/chr0mag/geoipsets/pull/24).) 
 ```
 # All tests below generate both ipv4 and ipv6 sets for both ipset and nftables.
 ## Python
