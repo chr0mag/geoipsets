@@ -21,36 +21,6 @@ class DbIpProvider(utils.AbstractProvider):
     def __init__(self, firewall: set, address_family: set, checksum: bool, countries: set, output_dir: str):
         super().__init__(firewall, address_family, checksum, countries, output_dir)
 
-        ipset_dir = self.base_dir / 'dbip/ipset' / utils.AddressFamily.IPV4.value
-        nftset_dir = self.base_dir / 'dbip/nftset' / utils.AddressFamily.IPV4.value
-        ip6set_dir = self.base_dir / 'dbip/ipset' / utils.AddressFamily.IPV6.value
-        nft6set_dir = self.base_dir / 'dbip/nftset' / utils.AddressFamily.IPV6.value
-        self.webpage = 'https://db-ip.com/db/download/ip-to-country-lite'
-
-        # remove/re-create old IPv4 sets if they exist
-        if ipset_dir.is_dir():
-            shutil.rmtree(ipset_dir)
-
-        if nftset_dir.is_dir():
-            shutil.rmtree(nftset_dir)
-
-        if self.ip_tables:
-            ipset_dir.mkdir(parents=True)
-        if self.nf_tables:
-            nftset_dir.mkdir(parents=True)
-
-        # remove/re-create old IPv6 sets if they exist
-        if ip6set_dir.is_dir():
-            shutil.rmtree(ip6set_dir)
-
-        if nft6set_dir.is_dir():
-            shutil.rmtree(nft6set_dir)
-
-        if self.ip_tables:
-            ip6set_dir.mkdir(parents=True)
-        if self.nf_tables:
-            nft6set_dir.mkdir(parents=True)
-
     def generate(self):
         """
         While nftables' set facility accepts both IPv4 and IPv6 IP ranges, ipset only accepts IPv4 IP ranges.
@@ -90,6 +60,34 @@ class DbIpProvider(utils.AbstractProvider):
         self.build_sets(country_subnets)
 
     def build_sets(self, dict_of_lists):
+        ipset_dir = self.base_dir / 'dbip/ipset' / utils.AddressFamily.IPV4.value
+        nftset_dir = self.base_dir / 'dbip/nftset' / utils.AddressFamily.IPV4.value
+        ip6set_dir = self.base_dir / 'dbip/ipset' / utils.AddressFamily.IPV6.value
+        nft6set_dir = self.base_dir / 'dbip/nftset' / utils.AddressFamily.IPV6.value
+
+        # remove old sets if they exist
+        if self.ip_tables:
+            if self.ipv4:
+                if ipset_dir.is_dir():
+                    shutil.rmtree(ipset_dir)
+                ipset_dir.mkdir(parents=True)
+
+            if self.ipv6:
+                if ip6set_dir.is_dir():
+                    shutil.rmtree(ip6set_dir)
+                ip6set_dir.mkdir(parents=True)
+
+        if self.nf_tables:
+            if self.ipv4:
+                if nftset_dir.is_dir():
+                    shutil.rmtree(nftset_dir)
+                nftset_dir.mkdir(parents=True)
+
+            if self.ipv6:
+                if nft6set_dir.is_dir():
+                    shutil.rmtree(nft6set_dir)
+                nft6set_dir.mkdir(parents=True)
+
         for set_name, subnets in dict_of_lists.items():
             set_name_parts = set_name.split('.')
             country_code = set_name_parts[0]
@@ -142,8 +140,9 @@ class DbIpProvider(utils.AbstractProvider):
         return gzip_file.name
 
     def download_checksum(self):
+        webpage = 'https://db-ip.com/db/download/ip-to-country-lite'
         # download sha1sum
-        webpage_http_response = requests.get(self.webpage)
+        webpage_http_response = requests.get(webpage)
 
         # the page section we're looking for looks like this:
         # <dl class="card-body">
