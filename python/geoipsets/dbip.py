@@ -51,11 +51,18 @@ class DbIpProvider(utils.AbstractProvider):
                         inet_suffix = 'ipv' + str(ip_version)
                         filename_key = cc + '.' + inet_suffix
                         ip_end = ip_address(r['ip_end'])
-                        subnets = [nets.with_prefixlen for nets in summarize_address_range(ip_start, ip_end)]
-                        if filename_key in country_subnets:  # append
-                            country_subnets[filename_key].extend(subnets)
-                        else:  # create
-                            country_subnets[filename_key] = subnets
+                        if self.ip_tables:  # https://github.com/chr0mag/geoipsets/issues/25
+                            subnets = [nets.with_prefixlen for nets in summarize_address_range(ip_start, ip_end)]
+                            if filename_key in country_subnets:  # append
+                                country_subnets[filename_key].extend(subnets)
+                            else:  # create
+                                country_subnets[filename_key] = subnets
+                        else:  # conversion not required for nftables
+                            ip_range = r['ip_start'] + '-' + r['ip_end']
+                            if filename_key in country_subnets:  # append
+                                country_subnets[filename_key].append(ip_range)
+                            else:  # create
+                                country_subnets[filename_key] = [ip_range]
 
         self.build_sets(country_subnets)
 
