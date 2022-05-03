@@ -58,7 +58,10 @@ class DbIpProvider(utils.AbstractProvider):
                             else:  # create
                                 country_subnets[filename_key] = subnets
                         else:  # conversion not required for nftables
-                            ip_range = r['ip_start'] + '-' + r['ip_end']
+                            if ip_start == ip_end:  # nftables disallows intervals with the same start & end
+                                ip_range = r['ip_start']
+                            else:
+                                ip_range = r['ip_start'] + '-' + r['ip_end']
                             if filename_key in country_subnets:  # append
                                 country_subnets[filename_key].append(ip_range)
                             else:  # create
