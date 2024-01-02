@@ -39,21 +39,20 @@ jobs:
   run-integration-tests:
     needs: generate-geoipsets
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+#        provider: [ dbip, maxmind ]
+        firewall: [ nftset, ipset ]
+        address-family: [ ipv4, ipv6 ]
     steps:
       - name: Download geoipsets
         uses: actions/download-artifact@v4
         with:
           name: geoipsets-data
           path: /tmp/geoipsets
-      - name: List geoipsets
+      - name: Run integration tests
+        working-directory: ./scripts
         run: |
-          ls -R /tmp/geoipsets
-
-#  run-integration-tests:
-#    runs-on: ubuntu-latest
-#    strategy:
-#      fail-fast: false
-#      matrix:
-#        provider: [ dbip, maxmind ]
-#        firewall: [ nftset, ipset ]
-#        address-family: [ ipv4, ipv6 ]
+          ./integration_test.sh dbip ${{ matrix.firewall }} ${{ matrix.address-family }}
+          if [ "$?" -ne 0 ]; then exit 1; fi
