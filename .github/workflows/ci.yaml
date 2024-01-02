@@ -14,9 +14,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        #  TODO: checkout master & latest tag/release
       - name: Set up Python 3.10
         uses: actions/setup-python@v5
         with:
+          # TODO: test against all supported python versions
           python-version: '3.10'
       - name: Install dependencies
         run: |
@@ -25,6 +27,8 @@ jobs:
       - name: Build geoipsets
         run: |
           python -m geoipsets --provider dbip --firewall nftables --firewall iptables --address-family ipv4 --address-family ipv6
+          if [ "$?" -ne 0 ]; then exit 1; fi
+          ls -R /tmp/geoipsets
         working-directory: ./python
 #  run-integration-tests:
 #    runs-on: ubuntu-latest
