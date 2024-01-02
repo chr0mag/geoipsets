@@ -3,6 +3,8 @@
 name: ci
 
 on:
+  push:
+    branches: [ '*' ]
   workflow_dispatch:
   schedule:
     - cron: '14 14 * * 3'
