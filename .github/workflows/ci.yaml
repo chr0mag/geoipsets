@@ -55,5 +55,5 @@ jobs:
       - name: Run integration tests
         working-directory: ./scripts
         run: |
-          ./integration_test.sh dbip ${{ matrix.firewall }} ${{ matrix.address-family }}
+          sudo bash integration_test.sh dbip ${{ matrix.firewall }} ${{ matrix.address-family }}
           if [ "$?" -ne 0 ]; then exit 1; fi
