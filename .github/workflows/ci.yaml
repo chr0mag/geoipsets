@@ -24,13 +24,19 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      - name: Generate geoipsets.conf
+        working-directory: ./scripts
+        env:
+          MAXMIND_KEY: ${{ secrets.MAXMIND_KEY }}
+        run: |
+          bash generate_geoipsets_conf.sh
       - name: Build geoipsets
         run: |
-          python -m geoipsets --provider dbip --firewall nftables --firewall iptables --address-family ipv4 --address-family ipv6
+          python -m geoipsets --config-file /tmp/geoipsets.conf
           if [ "$?" -ne 0 ]; then exit 1; fi
           ls -R /tmp/geoipsets
         working-directory: ./python
-      - name: Upload geoipsets
+      - name: Upload geoipsets data
         uses: actions/upload-artifact@v4
         with:
           name: geoipsets-data
@@ -42,13 +48,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-#        provider: [ dbip, maxmind ]
+        provider: [ dbip, maxmind ]
         firewall: [ nftset, ipset ]
         address-family: [ ipv4, ipv6 ]
     steps:
       - name: Install dependencies
         run: sudo apt-get install -y ipset jq
-      - name: Download geoipsets
+      - name: Download geoipsets data
         uses: actions/download-artifact@v4
         with:
           name: geoipsets-data
