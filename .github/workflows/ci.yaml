@@ -1,0 +1,65 @@
+# This workflow will build all geoipsets, load each set into nftables/iptables and use the set in a rule
+
+name: ci
+
+on:
+  push:
+    branches: [ '*' ]
+  workflow_dispatch:
+  schedule:
+    - cron: '14 14 * * 3'
+
+jobs:
+  generate-geoipsets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      - name: Generate geoipsets.conf
+        working-directory: ./scripts
+        env:
+          MAXMIND_KEY: ${{ secrets.MAXMIND_KEY }}
+        run: |
+          bash generate_geoipsets_conf.sh
+      - name: Build geoipsets
+        run: |
+          python -m geoipsets --config-file /tmp/geoipsets.conf
+          if [ "$?" -ne 0 ]; then exit 1; fi
+          ls -R /tmp/geoipsets
+        working-directory: ./python
+      - name: Upload geoipsets data
+        uses: actions/upload-artifact@v4
+        with:
+          name: geoipsets-data
+          path: /tmp/geoipsets
+
+  run-integration-tests:
+    needs: generate-geoipsets
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        provider: [ dbip, maxmind ]
+        firewall: [ nftset, ipset ]
+        address-family: [ ipv4, ipv6 ]
+    steps:
+      - name: Install dependencies
+        run: sudo apt-get install -y ipset jq
+      - name: Download geoipsets data
+        uses: actions/download-artifact@v4
+        with:
+          name: geoipsets-data
+          path: /tmp/geoipsets
+      - uses: actions/checkout@v4
+      - name: Run integration tests
+        working-directory: ./scripts
+        run: |
+          sudo bash integration_test.sh ${{ matrix.provider }} ${{ matrix.firewall }} ${{ matrix.address-family }}
+          if [ "$?" -ne 0 ]; then exit 1; fi

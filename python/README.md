@@ -1,4 +1,4 @@
-![badge](https://github.com/chr0mag/geoipsets/actions/workflows/python-tests.yaml/badge.svg) ![PyPI](https://img.shields.io/pypi/v/geoipsets) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/geoipsets) [![Downloads](https://pepy.tech/badge/geoipsets)](https://pepy.tech/project/geoipsets) ![GitHub](https://img.shields.io/github/license/chr0mag/geoipsets)
+![badge](https://github.com/chr0mag/geoipsets/actions/workflows/ci.yaml/badge.svg) ![PyPI](https://img.shields.io/pypi/v/geoipsets) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/geoipsets) [![Downloads](https://pepy.tech/badge/geoipsets)](https://pepy.tech/project/geoipsets) ![GitHub](https://img.shields.io/github/license/chr0mag/geoipsets)
 
 Installation
 ------------
