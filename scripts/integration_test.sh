@@ -76,7 +76,7 @@ EOF
       printf "pass\n"
     else
       printf "fail\n"
-      exit 1
+      error "Set '${s} failed to load."
     fi
   done
 }
@@ -123,7 +123,7 @@ function test_ipset() {
       printf "pass\n"
     else
       printf "fail\n"
-      exit 1
+      error "Set '${s} failed to load."
     fi
     $ipt_binary --table filter --flush
     ipset destroy
