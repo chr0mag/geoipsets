@@ -76,6 +76,7 @@ EOF
       printf "pass\n"
     else
       printf "fail\n"
+      exit 1
     fi
   done
 }
@@ -122,6 +123,7 @@ function test_ipset() {
       printf "pass\n"
     else
       printf "fail\n"
+      exit 1
     fi
     $ipt_binary --table filter --flush
     ipset destroy
