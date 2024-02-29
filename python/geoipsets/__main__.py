@@ -72,7 +72,7 @@ def get_config(cli_args=None):
                              the resolved file is invalid, then it is parsed as a comma-separated list.""")
     parser.add_argument("-o", "--output-dir",
                         type=str,
-                        default=default_output_dir,
+                        # default=default_output_dir,
                         help=f"""directory where geoipsets should be saved
                             (default: {[default_output_dir, '[current]'][default_output_dir == '.']})""")
     parser.add_argument("-c", "--config-file",
@@ -112,8 +112,8 @@ def get_config(cli_args=None):
         valid_conf_file = False
 
     if not valid_conf_file:
-        print(f"""WARNING: Configuration file {default_config_path} not found or recognized.\n
-            Default settings will be used:""")
+        print(f"WARNING: Configuration file {default_config_path} not found or recognized.")
+        print("Default settings will be used:")
         for k, v in default_options.items():
             if v != {''}:
                 print(f"   {k} = {v}")
@@ -125,8 +125,10 @@ def get_config(cli_args=None):
         if valid_conf_file and (output_dir := general.get('output-dir')) is not None:
             options['output-dir'] = output_dir
         else:
-            raise SystemExit("""ERROR: You need to specify output directory by command line.\n
-                Use '-h' for detailed information.""")
+            raise SystemExit(
+                    "ERROR: You need to specify output directory by command line.\n"
+                    "Use '-h' for detailed information."
+            )
 
     # step 3: provider
     if (providers := parser.parse_args(cli_args).provider) is not None:
@@ -183,7 +185,6 @@ def get_config(cli_args=None):
                 provider_options = config_file[p]
                 options[p] = provider_options
 
-    print(options)
     return options
 
 
