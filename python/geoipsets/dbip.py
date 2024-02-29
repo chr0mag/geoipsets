@@ -12,7 +12,7 @@ from tempfile import NamedTemporaryFile
 import requests
 from bs4 import BeautifulSoup
 
-from . import utils
+import utils
 
 
 class DbIpProvider(utils.AbstractProvider):
@@ -196,6 +196,6 @@ class DbIpProvider(utils.AbstractProvider):
 
         # compare downloaded sha1 hash with computed version
         if expected_sha1sum != computed_sha1sum:
-            raise RuntimeError("Computed CSV file digest '{0}' does not match expected value '{1}'".format(
+            raise SystemExit("ERROR: Computed CSV file digest '{0}' does not match expected value '{1}'".format(
                 computed_sha1sum, expected_sha1sum
             ))
