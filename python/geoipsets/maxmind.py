@@ -10,8 +10,9 @@ from tempfile import NamedTemporaryFile
 from zipfile import ZipFile
 
 import requests
+from requests.auth import HTTPBasicAuth
 
-from . import utils
+import utils
 
 
 class MaxMindProvider(utils.AbstractProvider):
@@ -23,11 +24,15 @@ class MaxMindProvider(utils.AbstractProvider):
         # Use this mechanism to introduce provider-specific options into the configuration file.
         super().__init__(firewall, address_family, checksum, countries, output_dir)
 
-        if not (license_key := provider_options.get('license-key')):
-            raise RuntimeError("License key cannot be empty")
+        if not (account_id := provider_options.get('account-id')):
+            raise SystemExit("ERROR: Account ID cannot be empty")
 
+        if not (license_key := provider_options.get('license-key')):
+            raise SystemExit("ERROR: License key cannot be empty")
+
+        self.auth = HTTPBasicAuth(account_id, license_key)
         self.license_key = license_key
-        self.base_url = 'https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-Country-CSV&license_key='
+        self.base_url = 'https://download.maxmind.com/geoip/databases/GeoLite2-Country-CSV/download'
 
     def generate(self):
         zip_file = self.download()  # comment out for testing
@@ -157,47 +162,47 @@ class MaxMindProvider(utils.AbstractProvider):
                 nftset_file.close()
 
     def download(self):
-        # URL: https://download.maxmind.com/app/geoip_download
-        # CSV query string: ?edition_id=GeoLite2-Country-CSV&license_key=LICENSE_KEY&suffix=zip
+        # URL: hhttps://download.maxmind.com/geoip/databases/GeoLite2-Country-CSV/download
+        # CSV query string: ?suffix=zip
 
         # The downloaded filename is available in the 'Content-Disposition' HTTP response header.
         # eg. Content-Disposition: attachment; filename=GeoLite2-Country-CSV_20200922.zip
         file_suffix = 'zip'
-        zip_url = self.base_url + self.license_key + '&suffix=' + file_suffix
+        zip_url = self.base_url + '?suffix=' + file_suffix
 
         # download latest ZIP file
-        zip_http_response = requests.get(zip_url)
+        zip_http_response = requests.get(zip_url, auth=self.auth)
         with NamedTemporaryFile(suffix='.' + file_suffix, delete=False) as zip_file:
             zip_file.write(zip_http_response.content)
 
         return zip_file
 
     def download_checksum(self):
-        # URL: https://download.maxmind.com/app/geoip_download
-        # MD5 query string: ?edition_id=GeoLite2-Country-CSV&license_key=LICENSE_KEY&suffix=zip.md5
-        file_suffix = 'zip.md5'
-        md5_url = self.base_url + self.license_key + '&suffix=' + file_suffix
-        md5_http_response = requests.get(md5_url)
-        with NamedTemporaryFile(suffix='.' + file_suffix, delete=False) as md5_file:
-            md5_file.write(md5_http_response.content)
-            md5_file.seek(0)
+        # URL: https://download.maxmind.com/geoip/databases/GeoLite2-Country-CSV/download
+        # SHA256 query string: ?suffix=zip.sha256
+        file_suffix = 'zip.sha256'
+        sha256_url = self.base_url + '?suffix=' + file_suffix
+        sha256_http_response = requests.get(sha256_url, auth=self.auth)
+        with NamedTemporaryFile(suffix='.' + file_suffix, delete=False) as sha256_file:
+            sha256_file.write(sha256_http_response.content)
+            sha256_file.seek(0)
 
-            return md5_file.read().decode('utf-8')
+            return sha256_file.read().decode('utf-8').split()[0]
 
     def check_checksum(self, zip_ref):
-        expected_md5sum = self.download_checksum()
+        expected_sha256sum = self.download_checksum()
 
-        # calculate md5 hash
+        # calculate sha256 hash
         with open(zip_ref.name, 'rb') as raw_zip_file:
-            md5_hash = hashlib.md5()
+            sha256_hash = hashlib.sha256()
             # Read and update hash in 8K chunks
             while chunk := raw_zip_file.read(8192):
-                md5_hash.update(chunk)
+                sha256_hash.update(chunk)
 
-            computed_md5sum = md5_hash.hexdigest()
+            computed_sha256sum = sha256_hash.hexdigest()
 
-        # compare downloaded md5 hash with computed version
-        if expected_md5sum != computed_md5sum:
-            raise RuntimeError("Computed zip file digest '{0}' does not match expected value '{1}'".format(
-                computed_md5sum, expected_md5sum
+        # compare downloaded sha256 hash with computed version
+        if expected_sha256sum != computed_sha256sum:
+            raise SystemExit("ERROR: Computed zip file digest '{0}' does not match expected value '{1}'".format(
+                computed_sha256sum, expected_sha256sum
             ))

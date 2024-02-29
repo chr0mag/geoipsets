@@ -17,7 +17,7 @@ function error() {
 
 # ensure the programs needed to execute are available
 function check_progs() {
-  local PROGS="awk sed curl unzip md5sum cat mktemp"
+  local PROGS="awk sed curl unzip sha256sum cat mktemp"
   which ${PROGS} > /dev/null 2>&1 || error "Searching PATH fails to find executables among: ${PROGS}"
 }
 
@@ -26,17 +26,18 @@ function check_progs() {
 # MD5 URL: https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-Country-CSV&license_key=LICENSE_KEY&suffix=zip.md5
 function download_geolite2_data() {
   local ZIPPED_FILE="GeoLite2-Country-CSV.zip"
-  local MD5_FILE="${ZIPPED_FILE}.md5"
-  local CSV_URL="https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-Country-CSV&license_key=${LICENSE_KEY}&suffix=zip"
-  local MD5_URL="${CSV_URL}.md5"
+  local SHA256_FILE="${ZIPPED_FILE}.sha256"
+  local CSV_URL="https://download.maxmind.com/geoip/databases/GeoLite2-Country-CSV/download?suffix=zip"
+  local SHA256_URL="${CSV_URL}.sha256"
 
   # download files
-  curl --silent --location --output $ZIPPED_FILE "$CSV_URL" || error "Failed to download: $CSV_URL"
-  curl --silent --location --output $MD5_FILE "$MD5_URL" || error "Failed to download: $MD5_URL"
+  curl --silent --location -J -u ${LICENSE_KEY} --output $ZIPPED_FILE "$CSV_URL" || error "Failed to download: $CSV_URL"
+  curl --silent --location -J -u ${LICENSE_KEY} --output $SHA256_FILE "$SHA256_URL" || error "Failed to download: $SHA256_URL"
 
   # validate checksum
-  # .md5 file is not in expected format so 'md5sum --check $MD5_FILE' doesn't work
-  [[ "$(cat ${MD5_FILE})" == "$(md5sum ${ZIPPED_FILE} | awk '{print $1}')" ]] || error "Downloaded md5 checksum does not match local md5sum"
+  # .sha256 file is not in expected format so 'sha256sum --check $SHA256_FILE' doesn't work
+  [[ "$(cat ${SHA256_FILE} | awk '{print $1}')" == "$(cat ${ZIPPED_FILE} | sha256sum | awk '{print $1}')" ]] || error \
+    "Downloaded sha256 checksum does not match local sha256sum.\nCheck your License key!"
 
   # unzip into current working directory
   unzip -j -q -d . ${ZIPPED_FILE}
@@ -77,8 +78,15 @@ function build_ipv4_sets {
   readonly IPV4_IPSET_DIR="./geoipsets/ipset/ipv4/"
   readonly IPV4_NFTSET_DIR="./geoipsets/nftset/ipv4/"
 
-  rm -rf $IPV4_IPSET_DIR $IPV4_NFTSET_DIR
-  mkdir --parent $IPV4_IPSET_DIR $IPV4_NFTSET_DIR
+  if [[ $IPTABLES = "yes" ]]; then
+    rm -rf $IPV4_IPSET_DIR
+    mkdir --parent $IPV4_IPSET_DIR
+  fi
+
+  if [[ ! -v NFTABLES || $NFTABLES -eq "yes" ]]; then
+    rm -rf $IPV4_NFTSET_DIR
+    mkdir --parent $IPV4_NFTSET_DIR
+  fi
 
   OIFS=$IFS
   IFS=','
@@ -98,36 +106,45 @@ function build_ipv4_sets {
     SUBNET="${LINE[0]}"
     SET_NAME="${CC}.ipv4"
 
-    #
-    # iptables/ipsets
-    #
-    IPSET_FILE="${IPV4_IPSET_DIR}${SET_NAME}"
+    if [[ $IPTABLES = "yes" ]]; then
 
-    #create ipset file if it doesn't exist
-    if [[ ! -f $IPSET_FILE ]]; then
-      echo "create $SET_NAME hash:net maxelem 131072 comment" > $IPSET_FILE
+      #
+      # iptables/ipsets
+      #
+      
+      IPSET_FILE="${IPV4_IPSET_DIR}${SET_NAME}"
+
+      #create ipset file if it doesn't exist
+      if [[ ! -f $IPSET_FILE ]]; then
+        echo "create $SET_NAME hash:net maxelem 131072 comment" > $IPSET_FILE
+      fi
+      echo "add ${SET_NAME} ${SUBNET} comment ${CC}" >> $IPSET_FILE
     fi
-    echo "add ${SET_NAME} ${SUBNET} comment ${CC}" >> $IPSET_FILE
 
-    #
-    # nftables set
-    #
-    NFTSET_FILE="${IPV4_NFTSET_DIR}${SET_NAME}"
+    if [[ ! -v NFTABLES || $NFTABLES = "yes" ]]; then
 
-    #create nft set file if it doesn't exist
-    if [[ ! -f $NFTSET_FILE ]]; then
-      echo "define $SET_NAME = {" > $NFTSET_FILE
+      #
+      # nftables set
+      #
+
+      NFTSET_FILE="${IPV4_NFTSET_DIR}${SET_NAME}"
+
+      #create nft set file if it doesn't exist
+      if [[ ! -f $NFTSET_FILE ]]; then
+        echo "define $SET_NAME = {" > $NFTSET_FILE
+      fi
+      echo "${SUBNET}," >> $NFTSET_FILE
     fi
-    echo "${SUBNET}," >> $NFTSET_FILE
 
   done < <(sed -e 1d "${TEMPDIR}/${ID_IPv4_RANGE_MAP}")
   IFS=$OIFS
 
   #end nft set -- better way?
-  for f in $(ls $IPV4_NFTSET_DIR)
+  [[ ! -v NFTABLES || $NFTABLES -eq "yes" ]] && for f in $(ls -a $IPV4_NFTSET_DIR)
   do
     echo "}" >> "${IPV4_NFTSET_DIR}$f"
   done
+
 }
 
 # output
@@ -137,9 +154,16 @@ function build_ipv6_sets {
 
   readonly IPV6_IPSET_DIR="./geoipsets/ipset/ipv6/"
   readonly IPV6_NFTSET_DIR="./geoipsets/nftset/ipv6/"
+  
+  if [[ $IPTABLES = "yes" ]]; then
+    rm -rf $IPV6_IPSET_DIR
+    mkdir --parent $IPV6_IPSET_DIR
+  fi
 
-  rm -rf $IPV6_IPSET_DIR $IPV6_NFTSET_DIR
-  mkdir --parent $IPV6_IPSET_DIR $IPV6_NFTSET_DIR
+  if [[ ! -v NFTABLES || $NFTABLES -eq "yes" ]]; then
+    rm -rf $IPV6_NFTSET_DIR
+    mkdir --parent $IPV6_NFTSET_DIR
+  fi
 
   OIFS=$IFS
   IFS=','
@@ -159,43 +183,51 @@ function build_ipv6_sets {
     SUBNET="${LINE[0]}"
     SET_NAME="${CC}.ipv6"
 
-    #
-    # iptables/ipsets
-    #
-    IPSET_FILE="${IPV6_IPSET_DIR}${SET_NAME}"
+    if [[ $IPTABLES = "yes" ]]; then
 
-    #create ipset file if it doesn't exist
-    if [[ ! -f $IPSET_FILE ]]; then
-      echo "create $SET_NAME hash:net family inet6 comment" > $IPSET_FILE
+      #
+      # iptables/ipsets
+      #
+
+      IPSET_FILE="${IPV6_IPSET_DIR}${SET_NAME}"
+
+      #create ipset file if it doesn't exist
+      if [[ ! -f $IPSET_FILE ]]; then
+        echo "create $SET_NAME hash:net family inet6 comment" > $IPSET_FILE
+      fi
+      echo "add ${SET_NAME} ${SUBNET} comment ${CC}" >> $IPSET_FILE
     fi
-    echo "add ${SET_NAME} ${SUBNET} comment ${CC}" >> $IPSET_FILE
 
-    #
-    # nftables set
-    #
-    NFTSET_FILE="${IPV6_NFTSET_DIR}${SET_NAME}"
+    if [[ ! -v NFTABLES || $NFTABLES = "yes" ]]; then
 
-    #create nft set file if it doesn't exist
-    if [[ ! -f $NFTSET_FILE ]]; then
-      echo "define $SET_NAME = {" > $NFTSET_FILE
+      #
+      # nftables set
+      #
+      
+      NFTSET_FILE="${IPV6_NFTSET_DIR}${SET_NAME}"
+
+      #create nft set file if it doesn't exist
+      if [[ ! -f $NFTSET_FILE ]]; then
+        echo "define $SET_NAME = {" > $NFTSET_FILE
+      fi
+      echo "${SUBNET}," >> $NFTSET_FILE
     fi
-    echo "${SUBNET}," >> $NFTSET_FILE
-
   done < <(sed -e 1d "${TEMPDIR}/${ID_IPv6_RANGE_MAP}")
   IFS=$OIFS
 
   #end nft set -- better way?
-  for f in $(ls $IPV6_NFTSET_DIR)
+  [[ ! -v NFTABLES || $NFTABLES -eq "yes" ]] && for f in $(ls -a $IPV6_NFTSET_DIR)
   do
     echo "}" >> "${IPV6_NFTSET_DIR}$f"
   done
+
 }
 
 # accept an optional -k switch with argument
 function main() {
   
   # get license key
-  source /etc/bcs.conf > /dev/null 2>&1
+  source ./bcs.conf > /dev/null 2>&1
   local usage="Usage: ./build-country-sets.sh [-k <LICENSE_KEY>]" 
   while getopts ":k:" opt; do
     case ${opt} in
@@ -211,8 +243,8 @@ function main() {
     esac
   done
   shift $((OPTIND -1))
-
-  [[ -z "${LICENSE_KEY}" ]] && error "No valid license key provided."
+  [[ -z "${LICENSE_KEY}" ]] && error "No license key provided.";
+   
 
   # setup
   check_progs
@@ -224,8 +256,8 @@ function main() {
   build_id_name_map
   # place set output in current working directory
   popd > /dev/null 2>&1
-  build_ipv4_sets
-  build_ipv6_sets
+  [[ ! -v IPv4 || $IPv4 = "yes" ]] && build_ipv4_sets
+  [[ ! -v IPv6 || $IPv6 = "yes" ]] && build_ipv6_sets
 }
 
 main "$@"

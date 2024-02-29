@@ -1,6 +1,8 @@
-.idea
+**/.vscode
+**/.idea
 *.iml
 **/.pytest_cache
+**/venv
 python/dist
 python/geoipsets.egg-info
 python/build
