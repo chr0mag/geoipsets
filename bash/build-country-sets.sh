@@ -22,8 +22,8 @@ function check_progs() {
 }
 
 # retrieve latest MaxMind GeoLite2 IP country database and checksum
-# CSV URL: https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-Country-CSV&license_key=LICENSE_KEY&suffix=zip
-# MD5 URL: https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-Country-CSV&license_key=LICENSE_KEY&suffix=zip.md5
+# CSV URL: https://download.maxmind.com/geoip/databases/GeoLite2-Country-CSV/download?suffix=zip
+# SHA256 URL: https://download.maxmind.com/geoip/databases/GeoLite2-Country-CSV/download?suffix=zip.sha256
 function download_geolite2_data() {
   local ZIPPED_FILE="GeoLite2-Country-CSV.zip"
   local SHA256_FILE="${ZIPPED_FILE}.sha256"
