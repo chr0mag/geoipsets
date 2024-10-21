@@ -31,8 +31,8 @@ function download_geolite2_data() {
   local SHA256_URL="${CSV_URL}.sha256"
 
   # download files
-  curl --silent --location -J -u ${LICENSE_KEY} --output $ZIPPED_FILE "$CSV_URL" || error "Failed to download: $CSV_URL"
-  curl --silent --location -J -u ${LICENSE_KEY} --output $SHA256_FILE "$SHA256_URL" || error "Failed to download: $SHA256_URL"
+  curl --silent --location --user ${LICENSE_KEY} --output $ZIPPED_FILE "$CSV_URL" || error "Failed to download: $CSV_URL"
+  curl --silent --location --user ${LICENSE_KEY} --output $SHA256_FILE "$SHA256_URL" || error "Failed to download: $SHA256_URL"
 
   # validate checksum
   # .sha256 file is not in expected format so 'sha256sum --check $SHA256_FILE' doesn't work
