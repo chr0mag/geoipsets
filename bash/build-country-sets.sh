@@ -83,7 +83,7 @@ function build_ipv4_sets {
     mkdir --parent $IPV4_IPSET_DIR
   fi
 
-  if [[ ! -v NFTABLES || $NFTABLES -eq "yes" ]]; then
+  if [[ ! -v NFTABLES || $NFTABLES = "yes" ]]; then
     rm -rf $IPV4_NFTSET_DIR
     mkdir --parent $IPV4_NFTSET_DIR
   fi
@@ -140,7 +140,7 @@ function build_ipv4_sets {
   IFS=$OIFS
 
   #end nft set -- better way?
-  [[ ! -v NFTABLES || $NFTABLES -eq "yes" ]] && for f in $(ls -a $IPV4_NFTSET_DIR)
+  [[ ! -v NFTABLES || $NFTABLES = "yes" ]] && for f in $(ls -a $IPV4_NFTSET_DIR)
   do
     echo "}" >> "${IPV4_NFTSET_DIR}$f"
   done
@@ -160,7 +160,7 @@ function build_ipv6_sets {
     mkdir --parent $IPV6_IPSET_DIR
   fi
 
-  if [[ ! -v NFTABLES || $NFTABLES -eq "yes" ]]; then
+  if [[ ! -v NFTABLES || $NFTABLES = "yes" ]]; then
     rm -rf $IPV6_NFTSET_DIR
     mkdir --parent $IPV6_NFTSET_DIR
   fi
@@ -216,7 +216,7 @@ function build_ipv6_sets {
   IFS=$OIFS
 
   #end nft set -- better way?
-  [[ ! -v NFTABLES || $NFTABLES -eq "yes" ]] && for f in $(ls -a $IPV6_NFTSET_DIR)
+  [[ ! -v NFTABLES || $NFTABLES = "yes" ]] && for f in $(ls -a $IPV6_NFTSET_DIR)
   do
     echo "}" >> "${IPV6_NFTSET_DIR}$f"
   done
