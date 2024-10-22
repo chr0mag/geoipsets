@@ -140,11 +140,12 @@ function build_ipv4_sets {
   IFS=$OIFS
 
   #end nft set -- better way?
-  [[ ! -v NFTABLES || $NFTABLES = "yes" ]] && for f in "${IPV4_NFTSET_DIR}"*.ipv4
-  do
-    echo "}" >> "$f"
-  done
-
+  if [[ ! -v NFTABLES || $NFTABLES = "yes" ]]; then
+    for f in "${IPV4_NFTSET_DIR}"*.ipv4
+      do
+        echo "}" >> "$f"
+      done
+  fi
 }
 
 # output
@@ -216,11 +217,12 @@ function build_ipv6_sets {
   IFS=$OIFS
 
   #end nft set -- better way?
-  [[ ! -v NFTABLES || $NFTABLES = "yes" ]] && for f in "${IPV6_NFTSET_DIR}"*.ipv6
-  do
-    echo "}" >> "$f"
-  done
-
+  if [[ ! -v NFTABLES || $NFTABLES = "yes" ]]; then
+    for f in "${IPV6_NFTSET_DIR}"*.ipv6
+      do
+        echo "}" >> "$f"
+      done
+  fi
 }
 
 # accept an optional -k switch with argument
