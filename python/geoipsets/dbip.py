@@ -12,7 +12,7 @@ from tempfile import NamedTemporaryFile
 import requests
 from bs4 import BeautifulSoup
 
-import utils
+from . import utils
 
 
 class DbIpProvider(utils.AbstractProvider):

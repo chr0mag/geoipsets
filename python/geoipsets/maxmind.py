@@ -12,7 +12,7 @@ from zipfile import ZipFile
 import requests
 from requests.auth import HTTPBasicAuth
 
-import utils
+from . import utils
 
 
 class MaxMindProvider(utils.AbstractProvider):
@@ -31,7 +31,6 @@ class MaxMindProvider(utils.AbstractProvider):
             raise SystemExit("ERROR: License key cannot be empty")
 
         self.auth = HTTPBasicAuth(account_id, license_key)
-        self.license_key = license_key
         self.base_url = 'https://download.maxmind.com/geoip/databases/GeoLite2-Country-CSV/download'
 
     def generate(self):
@@ -162,7 +161,7 @@ class MaxMindProvider(utils.AbstractProvider):
                 nftset_file.close()
 
     def download(self):
-        # URL: hhttps://download.maxmind.com/geoip/databases/GeoLite2-Country-CSV/download
+        # URL: https://download.maxmind.com/geoip/databases/GeoLite2-Country-CSV/download
         # CSV query string: ?suffix=zip
 
         # The downloaded filename is available in the 'Content-Disposition' HTTP response header.
