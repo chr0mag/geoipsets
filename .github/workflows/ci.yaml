@@ -25,7 +25,8 @@ jobs:
       - name: Generate geoipsets.conf
         working-directory: ./scripts
         env:
-          MAXMIND_KEY: ${{ secrets.MAXMIND_KEY }}
+          MAXMIND_ACCT_ID: ${{ secrets.MAXMIND_KEY }}
+          MAXMIND_NEW_KEY: ${{ secrets.MAXMIND_KEY }}
         run: |
           bash generate_geoipsets_conf.sh
       - name: Build geoipsets
