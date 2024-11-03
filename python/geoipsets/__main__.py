@@ -6,9 +6,7 @@ from configparser import ConfigParser
 from pathlib import Path
 from sys import argv
 
-import utils
-import maxmind
-import dbip
+from . import utils, maxmind, dbip
 
 
 def get_version():
@@ -72,9 +70,8 @@ def get_config(cli_args=None):
                              the resolved file is invalid, then it is parsed as a comma-separated list.""")
     parser.add_argument("-o", "--output-dir",
                         type=str,
-                        # default=default_output_dir,
-                        help=f"""directory where geoipsets should be saved
-                            (default: {[default_output_dir, '[current]'][default_output_dir == '.']})""")
+                        default=default_output_dir,
+                        help="directory where geoipsets should be saved (default: {0})".format(default_output_dir))
     parser.add_argument("-c", "--config-file",
                         type=str,
                         default=default_config_path,
@@ -92,6 +89,7 @@ def get_config(cli_args=None):
     # set defaults
     default_options = dict()
     default_options['general'] = {''}
+    default_options['output-dir'] = default_output_dir
     default_options['provider'] = {'dbip'}
     default_options['firewall'] = {utils.Firewall.NF_TABLES.value}
     default_options['address-family'] = {utils.AddressFamily.IPV4.value}
@@ -111,24 +109,12 @@ def get_config(cli_args=None):
     else:
         valid_conf_file = False
 
-    if not valid_conf_file:
-        print(f"WARNING: Configuration file {default_config_path} not found or recognized.")
-        print("Default settings will be used:")
-        for k, v in default_options.items():
-            if v != {''}:
-                print(f"   {k} = {v}")
-
     # step 2: output_dir
     if (output_dir := parser.parse_args(cli_args).output_dir) is not None:
         options['output-dir'] = output_dir
     else:
         if valid_conf_file and (output_dir := general.get('output-dir')) is not None:
             options['output-dir'] = output_dir
-        else:
-            raise SystemExit(
-                    "ERROR: You need to specify output directory by command line.\n"
-                    "Use '-h' for detailed information."
-            )
 
     # step 3: provider
     if (providers := parser.parse_args(cli_args).provider) is not None:
