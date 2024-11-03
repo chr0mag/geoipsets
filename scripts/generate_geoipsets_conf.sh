@@ -33,5 +33,6 @@ address-family=ipv4,ipv6
 [maxmind]
 # specify MaxMind license key needed to download data
 # required for provider type 'maxmind', ignored by other provider types
-license-key=${MAXMIND_KEY}
+account-id=${MAXMIND_ACCT_ID}
+license-key=${MAXMIND_NEW_KEY}
 EOF
