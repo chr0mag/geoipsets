@@ -10,7 +10,7 @@ There is both a [Bash version](https://github.com/chr0mag/geoipsets/blob/main/ba
 
 This Python version supports 2 dataset providers: [dbip](https://db-ip.com/) and [MaxMind](https://www.maxmind.com). The Bash version only supports MaxMind and is effectively legacy at this point. It continues to work but there are no plans to update it further.
 
-If you use MaxMind a [both an account id and license key are required]([https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases/](https://dev.maxmind.com/geoip/updating-databases/#directly-downloading-databases)) to download the data.
+If you use MaxMind a [both an account id and license key are required](https://dev.maxmind.com/geoip/updating-databases/#directly-downloading-databases) to download the data.
 
 The remaining instructions apply equally to the Bash and Python versions.
 
