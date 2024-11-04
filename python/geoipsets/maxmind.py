@@ -173,7 +173,6 @@ class MaxMindProvider(utils.AbstractProvider):
         zip_http_response = requests.get(zip_url, auth=self.auth)
         with NamedTemporaryFile(suffix='.' + file_suffix, delete=False) as zip_file:
             zip_file.write(zip_http_response.content)
-            print(f"file size: {os.path.getsize(zip_file.name)}")
 
         return zip_file
 
@@ -187,8 +186,6 @@ class MaxMindProvider(utils.AbstractProvider):
             sha256_file.write(sha256_http_response.content)
             sha256_file.seek(0)
 
-            print(f"sha256 contents: {sha256_file.read()}")
-            sha256_file.seek(0)
             return sha256_file.read().decode('utf-8').split()[0]
 
     def check_checksum(self, zip_ref):
