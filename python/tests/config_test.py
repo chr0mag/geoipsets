@@ -34,7 +34,8 @@ def test_runas_module_invalid_option():
     assert out.returncode == 2
 
 
-@pytest.mark.parametrize("option", ['--provider', '--firewall', '--address-family'])
+@pytest.mark.parametrize("option", ['--provider', '--firewall', '--address-family',
+                                    '--countries', '--output-dir', '--config-file'])
 def test_valid_option_no_value(option):
     """
     Does the script exit if a valid option that requires a value doesn't have one?

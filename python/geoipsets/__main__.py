@@ -88,6 +88,8 @@ def get_config(cli_args=None):
 
     # set defaults
     default_options = dict()
+    default_options['general'] = {''}
+    default_options['output-dir'] = default_output_dir
     default_options['provider'] = {'dbip'}
     default_options['firewall'] = {utils.Firewall.NF_TABLES.value}
     default_options['address-family'] = {utils.AddressFamily.IPV4.value}
@@ -102,34 +104,40 @@ def get_config(cli_args=None):
         if (config_file := get_config_parser(config_file_path)) is None:
             valid_conf_file = False
 
-    # step 2: provider
+    if valid_conf_file and config_file.has_section('general'):
+        general = config_file['general']
+    else:
+        valid_conf_file = False
+
+    # step 2: output_dir
+    if (output_dir := parser.parse_args(cli_args).output_dir) is not None:
+        options['output-dir'] = output_dir
+    else:
+        if valid_conf_file and (output_dir := general.get('output-dir')) is not None:
+            options['output-dir'] = output_dir
+
+    # step 3: provider
     if (providers := parser.parse_args(cli_args).provider) is not None:
         options['provider'] = set(providers)
     else:
-        if valid_conf_file and config_file.has_section('general'):
-            general = config_file['general']
-            if (providers := general.get('provider')) is not None:
-                options['provider'] = set(providers.split(','))
+        if valid_conf_file and (providers := general.get('provider')) is not None:
+            options['provider'] = set(providers.split(','))
 
-    # step 3: firewall
+    # step 4: firewall
     if (firewalls := parser.parse_args(cli_args).firewall) is not None:
         options['firewall'] = set(firewalls)
     else:
-        if valid_conf_file and config_file.has_section('general'):
-            general = config_file['general']
-            if (firewalls := general.get('firewall')) is not None:
-                options['firewall'] = set(firewalls.split(','))
+        if valid_conf_file and (firewalls := general.get('firewall')) is not None:
+            options['firewall'] = set(firewalls.split(','))
 
-    # step 4: address family
+    # step 5: address family
     if (address_family := parser.parse_args(cli_args).address_family) is not None:
         options['address-family'] = set(address_family)
     else:
-        if valid_conf_file and config_file.has_section('general'):
-            general = config_file['general']
-            if (address_family := general.get('address-family')) is not None:
-                options['address-family'] = set(address_family.split(','))
+        if valid_conf_file and (address_family := general.get('address-family')) is not None:
+            options['address-family'] = set(address_family.split(','))
 
-    # step 5: countries
+    # step 6: countries
     if (country_arg := parser.parse_args(cli_args).countries) is not None:
         country_set = set()
         try:
@@ -156,15 +164,13 @@ def get_config(cli_args=None):
             if len(countries) > 0:
                 options['countries'] = countries
 
-    # step 6: provider options
+    # step 7: provider options
     if valid_conf_file:
         for p in options.get('provider'):
             if config_file.has_section(p):
                 provider_options = config_file[p]
                 options[p] = provider_options
 
-    # step 7: output path
-    options['output-dir'] = parser.parse_args(cli_args).output_dir
     return options
 
 

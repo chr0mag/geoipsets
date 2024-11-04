@@ -2,6 +2,8 @@
 
 cat << EOF > /tmp/geoipsets.conf
 [general]
+# specify a directory where geoipsets should be saved
+output-dir=/tmp
 # list of providers from which to acquire IP ranges
 # options are:
 # 'maxmind': www.maxmind.com
@@ -33,5 +35,6 @@ address-family=ipv4,ipv6
 [maxmind]
 # specify MaxMind license key needed to download data
 # required for provider type 'maxmind', ignored by other provider types
-license-key=${MAXMIND_KEY}
+account-id=${MAXMIND_ACCT_ID}
+license-key=${MAXMIND_NEW_KEY}
 EOF
