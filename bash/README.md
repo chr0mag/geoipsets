@@ -28,3 +28,5 @@ geoipsets
     ├── ipv4
     └── ipv6
 ```
+
+Environment variables limiting which sets are generated are available. See https://github.com/chr0mag/geoipsets/blob/main/bash/bcs.conf .

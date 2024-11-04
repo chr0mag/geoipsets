@@ -15,7 +15,7 @@ The following minimal pre-commit-config.yaml is enough:
 files: 'python/'
 repos:
   - repo: https://github.com/pycqa/flake8
-    rev: 3.9.1
+    rev: 7.1.1
     hooks:
       - id: flake8
         args: ['--max-line-length', '120']
