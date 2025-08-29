@@ -13,7 +13,7 @@ jobs:
   generate-geoipsets:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -58,7 +58,7 @@ jobs:
         with:
           name: geoipsets-data
           path: /tmp/geoipsets
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Run integration tests
         working-directory: ./scripts
         run: |
