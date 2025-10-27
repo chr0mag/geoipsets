@@ -36,7 +36,7 @@ jobs:
           ls -R /tmp/geoipsets
         working-directory: ./python
       - name: Upload geoipsets data
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: geoipsets-data
           path: /tmp/geoipsets
