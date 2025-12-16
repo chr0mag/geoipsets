@@ -70,7 +70,6 @@ def get_config(cli_args=None):
                              the resolved file is invalid, then it is parsed as a comma-separated list.""")
     parser.add_argument("-o", "--output-dir",
                         type=str,
-                        default=default_output_dir,
                         help="directory where geoipsets should be saved (default: {0})".format(default_output_dir))
     parser.add_argument("-c", "--config-file",
                         type=str,
