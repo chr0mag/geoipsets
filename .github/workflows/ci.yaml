@@ -54,7 +54,7 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get install -y ipset jq
       - name: Download geoipsets data
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: geoipsets-data
           path: /tmp/geoipsets
