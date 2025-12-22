@@ -52,6 +52,9 @@ class MaxMindProvider(utils.AbstractProvider):
             if self.ipv6:
                 self.build_sets(id_cc_map, zip_ref, zip_dir_prefix, utils.AddressFamily.IPV6)
 
+        zip_file.close()
+        os.remove(zip_file.name)
+
     def build_id_cc_map(self, zip_ref: ZipFile, dir_prefix: str):
         # Build dictionary mapping geoname_ids to ISO country codes
         # {6251999: 'CA', 1269750: 'IN'}
@@ -182,7 +185,7 @@ class MaxMindProvider(utils.AbstractProvider):
         file_suffix = 'zip.sha256'
         sha256_url = self.base_url + '?suffix=' + file_suffix
         sha256_http_response = requests.get(sha256_url, auth=self.auth)
-        with NamedTemporaryFile(suffix='.' + file_suffix, delete=False) as sha256_file:
+        with NamedTemporaryFile(suffix='.' + file_suffix, delete=True) as sha256_file:
             sha256_file.write(sha256_http_response.content)
             sha256_file.seek(0)
 

@@ -3,6 +3,7 @@
 import gzip
 import hashlib
 import shutil
+import os
 from csv import DictReader
 from datetime import datetime
 from io import TextIOWrapper
@@ -68,6 +69,7 @@ class DbIpProvider(utils.AbstractProvider):
                                 country_subnets[filename_key] = [ip_range]
 
         self.build_sets(country_subnets)
+        os.remove(gzip_ref)
 
     def build_sets(self, dict_of_lists):
         ipset_dir = self.base_dir / 'dbip/ipset' / utils.AddressFamily.IPV4.value
