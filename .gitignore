@@ -9,3 +9,4 @@ python/build
 **/__pycache__
 **/setup.py.REAL
 .pre-commit-config.yaml
+.mailmap
